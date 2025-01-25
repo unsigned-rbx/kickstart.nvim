@@ -1,4 +1,5 @@
 --[[
+RunService
 
 =====================================================================
 ==================== READ THIS BEFORE CONTINUING ====================
@@ -19,7 +20,6 @@
 ========                                                     ========
 =====================================================================
 =====================================================================
-
 What is Kickstart?
 
   Kickstart.nvim is *not* a distribution.
@@ -102,7 +102,7 @@ vim.g.have_nerd_font = true
 vim.opt.number = true
 -- You can also add relative line numbers, to help with jumping.
 --  Experiment for yourself to see if you like it!
--- vim.opt.relativenumber = true
+vim.opt.relativenumber = true
 
 -- Enable mouse mode, can be useful for resizing splits for example!
 vim.opt.mouse = 'a'
@@ -163,6 +163,13 @@ vim.opt.scrolloff = 10
  Custom stuff
 ]]
 
+-- reload
+vim.api.nvim_set_keymap(
+  'n',
+  '<leader>rf',
+  [[<cmd>lua require("plenary.reload").reload_module("cmp_sources.fusion"); require("cmp_sources.fusion"); print("Reloaded fusion source!")<CR>]],
+  { noremap = true, silent = true }
+)
 -- center when scrolling
 vim.keymap.set('n', 'j', 'jzz', { noremap = true })
 vim.keymap.set('n', 'k', 'kzz', { noremap = true })
@@ -507,7 +514,7 @@ require('lazy').setup({
           sorter = 'case_sensitive',
         },
         view = {
-          width = 30,
+          width = 40,
         },
         renderer = {
           group_empty = true,
@@ -878,6 +885,7 @@ require('lazy').setup({
           -- },
         },
       },
+      'onsails/lspkind.nvim', -- for icons
       'saadparwaiz1/cmp_luasnip',
 
       -- Adds other completion capabilities.
@@ -889,7 +897,10 @@ require('lazy').setup({
     config = function()
       -- See `:help cmp`
       local cmp = require 'cmp'
+      local fusion_source = require 'cmp_sources.fusion'
+      cmp.register_source('fusion', fusion_source:new())
       local luasnip = require 'luasnip'
+      local lspkind = require 'lspkind'
       luasnip.config.setup {}
 
       cmp.setup {
@@ -899,7 +910,14 @@ require('lazy').setup({
           end,
         },
         completion = { completeopt = 'menu,menuone,noinsert' },
-
+        formatting = {
+          format = lspkind.cmp_format {
+            mode = 'symbol_text', -- show symbol + text
+            maxwidth = 50, -- prevent the popup from showing more than provided characters
+            -- The preset defines default icons and settings, but you can also add your own icons.
+            preset = 'default',
+          },
+        },
         -- For an understanding of why these mappings were
         -- chosen, you will need to read `:help ins-completion`
         --
@@ -961,6 +979,7 @@ require('lazy').setup({
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
           { name = 'path' },
+          { name = 'fusion' },
         },
       }
     end,
@@ -1054,7 +1073,44 @@ require('lazy').setup({
     --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
     --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
   },
-
+  {
+    'RRethy/nvim-treesitter-endwise',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    event = 'InsertEnter', -- or however you prefer to lazy-load
+    config = function()
+      require('nvim-treesitter.configs').setup {
+        endwise = {
+          enable = true,
+        },
+        -- any other treesitter settings...
+      }
+    end,
+  },
+  {
+    -- Treesitter textobjects
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' }, -- ensure TS is installed
+    event = 'BufReadPost', -- or lazy-load however you'd like
+    config = function()
+      require('nvim-treesitter.configs').setup {
+        textobjects = {
+          -- Example settings
+          select = {
+            enable = true,
+            lookahead = true,
+            keymaps = {
+              -- You can define your textobject keymaps
+              ['af'] = '@function.outer',
+              ['if'] = '@function.inner',
+              -- etc.
+            },
+          },
+          -- See https://github.com/nvim-treesitter/nvim-treesitter-textobjects#default-config
+          -- for other modules: swap, move, lsp_interop, ...
+        },
+      }
+    end,
+  },
   -- The following comments only work if you have downloaded the kickstart repo, not just copy pasted the
   -- init.lua. If you want these files, they are in the repository, so you can just download them and
   -- place them in the correct locations.
