@@ -24,7 +24,7 @@ What is Kickstart?
 
   Kickstart.nvim is *not* a distribution.
 
-  Kickstart.nvim is a starting point for your own configuration.
+  Kickstart.nvim is a starting point for your own configuration.babababababab
     The goal is that you can read every line of code, top-to-bottom, understand
     what your configuration is doing, and modify it to suit your needs.
 
@@ -91,7 +91,7 @@ vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
@@ -147,6 +147,9 @@ vim.opt.splitbelow = true
 vim.opt.list = true
 vim.opt.listchars = { tab = '» ', trail = '·', nbsp = '␣' }
 
+-- nvim tree
+vim.keymap.set('n', '<leader>e', '<cmd>NvimTreeToggle<CR>', { silent = true, noremap = true })
+
 -- Preview substitutions live, as you type!
 vim.opt.inccommand = 'split'
 
@@ -155,6 +158,18 @@ vim.opt.cursorline = true
 
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
+
+--[[
+ Custom stuff
+]]
+
+-- center when scrolling
+vim.keymap.set('n', 'j', 'jzz', { noremap = true })
+vim.keymap.set('n', 'k', 'kzz', { noremap = true })
+
+-- move selected up and down
+vim.keymap.set('v', '<S-j>', ":m '>+1<CR>gv=gv", { noremap = true, silent = true })
+vim.keymap.set('v', '<S-k>', ":m '<-2<CR>gv=gv", { noremap = true, silent = true })
 
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
@@ -189,6 +204,34 @@ vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right win
 vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
 vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
 
+local function rojo_project()
+  return vim.fs.root(0, function(name)
+    return name:match '.+%.project%.json$'
+  end)
+end
+
+-- [[ Luau filetype detection ]]
+-- Automatically recognise .lua as luau files in a Roblox project
+if rojo_project() then
+  vim.filetype.add {
+    extension = {
+      lua = function(path)
+        return path:match '%.nvim%.lua$' and 'lua' or 'luau'
+      end,
+    },
+  }
+end
+
+local function get_capabilities()
+  local capabilities = vim.lsp.protocol.make_client_capabilities()
+  capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+
+  -- Enable manually file watcher capability, so luau-lsp will be aware of sourcemap.json changes, this
+  -- is done internally in Neovim 0.10+, but only for non Linux systems
+  capabilities.workspace.didChangeWatchedFiles.dynamicRegistration = true
+
+  return capabilities
+end
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 
@@ -452,6 +495,83 @@ require('lazy').setup({
     },
   },
   {
+    'nvim-tree/nvim-tree.lua',
+    version = '*',
+    lazy = false,
+    dependencies = {
+      'nvim-tree/nvim-web-devicons',
+    },
+    config = function()
+      require('nvim-tree').setup {
+        sort = {
+          sorter = 'case_sensitive',
+        },
+        view = {
+          width = 30,
+        },
+        renderer = {
+          group_empty = true,
+        },
+        filters = {
+          dotfiles = true,
+        },
+      }
+    end,
+  },
+  {
+    'lopi-py/luau-lsp.nvim',
+    config = function()
+      -- We call `require("luau-lsp").setup` instead of `require("lspconfig").luau_lsp.setup` because luau-lsp.nvim will
+      -- add extra features to luau-lsp, so we don't need to call lspconfig's setup
+      --
+      -- See https://github.com/lopi-py/luau-lsp.nvim
+      require('luau-lsp').setup {
+        sourcemap = {
+          enabled = true,
+          autogenerate = true, -- automatic generation when the server is attached
+          rojo_project_file = 'default.project.json',
+          sourcemap_file = 'sourcemap.json',
+        },
+        fflags = {
+          enable_new_solver = false, -- enables the flags required for luau's new type solver.
+          sync = true, -- sync currently enabled fflags with roblox's published fflags
+          override = { -- override fflags passed to luau
+          },
+        },
+        types = {
+          definition_files = {
+            './types/PlayerReplica.d.luau',
+            './types/Default.d.luau',
+            './types/Enums.d.luau',
+          },
+        },
+        platform = {
+          type = rojo_project() and 'roblox' or 'standard',
+        },
+        plugin = {
+          enabled = true,
+        },
+        server = {
+          capabilities = get_capabilities(),
+          settings = {
+            ['luau-lsp'] = {
+              ignoreGlobs = { '**/_Index/**', 'node_modules/**' },
+              completion = {
+                imports = {
+                  enabled = true,
+                  ignoreGlobs = { '**/_Index/**', 'node_modules/**' },
+                },
+              },
+            },
+          },
+        },
+      }
+    end,
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+  },
+  {
     -- Main LSP Configuration
     'neovim/nvim-lspconfig',
     dependencies = {
@@ -660,12 +780,20 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
+        'lua-language-server',
+        'luau-lsp',
+        'stylua',
+
+        'vtsls',
+        'eslint-lsp',
+        'prettierd',
+        'json-lsp',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
       require('mason-lspconfig').setup {
         handlers = {
+          luau_lsp = function() end,
           function(server_name)
             local server = servers[server_name] or {}
             -- This handles overriding only values explicitly passed
@@ -837,7 +965,12 @@ require('lazy').setup({
       }
     end,
   },
-
+  {
+    'felipeagc/fleet-theme-nvim',
+    config = function()
+      vim.cmd 'colorscheme fleet'
+    end,
+  },
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
@@ -902,7 +1035,7 @@ require('lazy').setup({
     main = 'nvim-treesitter.configs', -- Sets main module to use for opts
     -- [[ Configure Treesitter ]] See `:help nvim-treesitter`
     opts = {
-      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc' },
+      ensure_installed = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'markdown_inline', 'query', 'vim', 'vimdoc', 'luau' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
