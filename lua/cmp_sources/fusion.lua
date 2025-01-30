@@ -4,21 +4,6 @@ local curl = require 'plenary.curl'
 local apiPath = 'https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/refs/heads/roblox/API-Dump.json' --'https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tracker/roblox/api-docs/en-us.json'
 --
 local source = {}
-local CLASS_PROPERTIES = {
-  Frame = {
-    'AnchorPoint',
-    'BackgroundColor3',
-    'BackgroundTransparency',
-    'BorderColor3',
-    'BorderSizePixel',
-    'ClipsDescendants',
-    'Position',
-    'Size',
-    'Visible',
-    -- ... add as many as you need
-  },
-  -- e.g. "TextButton" -> { "Text", "Font", ... }, etc.
-}
 
 local classes = {}
 
@@ -57,10 +42,6 @@ local function populateClasses(mappedApi)
         end
       end
     end
-    --local formatted_key = key:match '^@roblox/globaltype/([^%.]+)'
-    -- if formatted_key then
-    --   globalTypes[formatted_key] = true
-    -- end
   end
 end
 
@@ -211,6 +192,9 @@ local mappedAutocomplete = {
   Vector2int16 = 'Vector2int16.new(${1})',
   Vector3 = 'Vector3.new(${1})',
   Vector3int16 = 'Vector3int16.new(${1})',
+  float = '',
+  BrickColor = 'BrickColor.random()${1}',
+  bool = 'true${1}',
 }
 
 function source:complete(request, callback)
