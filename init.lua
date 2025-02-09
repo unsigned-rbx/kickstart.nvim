@@ -2,7 +2,6 @@ require "core.autocommands"
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = " "
-
 vim.g.have_nerd_font = true
 
 vim.opt.number = true
@@ -47,6 +46,8 @@ vim.opt.scrolloff = 10
  Custom stuff
 ]]
 
+-- Make sure you have ripgrep installed.
+-- Add the following function to your `~/.config/nvim/init.lua`:
 -- remote auto comment
 vim.opt.formatoptions:remove "r"
 vim.opt.formatoptions:remove "o"
@@ -615,10 +616,10 @@ require("lazy").setup({
 
   -- Set tabstop and shifwidth when opening a file
   -- See `:help 'tabstop'` and `:help 'shifwidth'`
-  -- {
-  --   "NMAC427/guess-indent.nvim",
-  --   opts = {},
-  -- },
+  {
+    "NMAC427/guess-indent.nvim",
+    opts = {},
+  },
   {
     "stevearc/conform.nvim",
     event = { "BufWritePre" },
@@ -646,11 +647,20 @@ require("lazy").setup({
       },
     },
   },
+  {
+    "gbprod/cutlass.nvim",
+    opts = {
+      -- your configuration comes here
+      -- or don't set opts to use the default settings
+      -- refer to the configuration section below
+    },
+  },
   { -- Autocompletion
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
     dependencies = {
       -- Snippet Engine & its associated nvim-cmp source
+
       {
         "L3MON4D3/LuaSnip",
         build = (function()
@@ -668,11 +678,16 @@ require("lazy").setup({
           --    https://github.com/rafamadriz/friendly-snippets
           {
             "rafamadriz/friendly-snippets",
-            config = function()
-              require("luasnip.loaders.from_vscode").lazy_load()
-            end,
+            config = function() end,
           },
         },
+        config = function()
+          -- require("luasnip").filetype_extend("luau", { "lua" })
+          require("luasnip.loaders.from_vscode").lazy_load()
+          -- require("luasnip.loaders.from_vscode").lazy_load {
+          --   paths = { "~/.config/nvim/lua/snippets/" },
+          -- }
+        end,
       },
       "onsails/lspkind.nvim", -- for icons
       "saadparwaiz1/cmp_luasnip",
@@ -681,6 +696,11 @@ require("lazy").setup({
       --  nvim-cmp does not ship with all sources by default. They are split
       --  into multiple repos for maintenance purposes.
       "hrsh7th/cmp-nvim-lsp",
+
+      -- Snippet loader, by default it will load snippets in `NVIM_CONFIG/snippets/*.json`
+      -- See https://github.com/garymjr/nvim-snippets
+      { "garymjr/nvim-snippets", opts = {} },
+
       "hrsh7th/cmp-path",
     },
     config = function()
@@ -730,9 +750,9 @@ require("lazy").setup({
 
           -- If you prefer more traditional completion keymaps,
           -- you can uncomment the following lines
-          --['<CR>'] = cmp.mapping.confirm { select = true },
-          --['<Tab>'] = cmp.mapping.select_next_item(),
-          --['<S-Tab>'] = cmp.mapping.select_prev_item(),
+          ["<CR>"] = cmp.mapping.confirm { select = true },
+          ["<Tab>"] = cmp.mapping.select_next_item(),
+          ["<S-Tab>"] = cmp.mapping.select_prev_item(),
 
           -- Manually trigger a completion from nvim-cmp.
           --  Generally you don't need this, because nvim-cmp will display
@@ -768,6 +788,8 @@ require("lazy").setup({
             group_index = 0,
           },
           { name = "luasnip", priority = 1000 },
+          { name = "snippets", priority = 980 },
+          { name = "neorg", priority = 970 },
           { name = "fusion", priority = 950 },
           { name = "nvim_lsp", priority = 900 },
           { name = "path", priority = 800 },
@@ -805,7 +827,39 @@ require("lazy").setup({
     dependencies = { "nvim-lua/plenary.nvim" },
     opts = { signs = false },
   },
-
+  {
+    "nvim-neorg/neorg",
+    --build = ":Neorg sync-parsers",
+    --lazy = false,
+    ft = "norg",
+    cmd = "Neorg",
+    lazy = true,
+    dependencies = { { "nvim-lua/plenary.nvim" }, { "nvim-neorg/neorg-telescope" } },
+    config = function()
+      require("neorg").setup {
+        load = {
+          ["core.defaults"] = {},
+          ["core.concealer"] = {},
+          ["core.summary"] = {},
+          ["core.integrations.telescope"] = {
+            config = {
+              insert_file_link = {
+                -- Whether to show the title preview in telescope. Affects performance with a large
+                -- number of files.
+                show_title_preview = true,
+              },
+            },
+          },
+          ["core.completion"] = {
+            config = {
+              engine = "nvim-cmp",
+            },
+          },
+          ["core.integrations.nvim-cmp"] = {},
+        },
+      }
+    end,
+  },
   { -- Collection of various small independent plugins/modules
     "echasnovski/mini.nvim",
     config = function()
@@ -872,7 +926,7 @@ require("lazy").setup({
         --  the list of additional_vim_regex_highlighting and disabled languages for indent.
         additional_vim_regex_highlighting = { "ruby" },
       },
-      indent = { enable = true, disable = { "ruby" } },
+      indent = { enable = false, disable = { "ruby" } },
     },
     -- There are additional nvim-treesitter modules that you can use to interact
     -- with nvim-treesitter. You should go explore a few and see what interests you:
@@ -908,6 +962,11 @@ require("lazy").setup({
     main = "ibl", -- Version 3 uses "ibl" as the main entry point
     config = function()
       require("ibl").setup {
+        exclude = {
+          filetypes = {
+            "norg",
+          },
+        },
         indent = {
           char = "│", -- Character used for the vertical indent line
         },

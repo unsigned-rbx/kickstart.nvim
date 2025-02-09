@@ -1,0 +1,87 @@
+{
+    "Define Command Table": {
+        "prefix": "command",
+        "body": [
+            "return {",
+            "\tName = \"${1:command-name}\",",
+            "\tAliases = { ${2} },",
+            "\tDescription = \"${3}\",",
+            "\tGroup = \"${4:Admin}\",",
+            "\tArgs = {",
+            "\t\t{",
+            "\t\t\tType = \"${5:player}\",",
+            "\t\t\tName = \"${6:player}\",",
+            "\t\t\tDescription = \"${7:The player}\"",
+            "\t\t},",
+            "\t},",
+            "}"
+        ],
+        "description": "Creates a command definition table for your script."
+    },
+    "Define Server": {
+        "prefix": "commandServer",
+        "body": [
+            "local ServerScriptService = game:GetService(\"ServerScriptService\")",
+            "local Persistence = require(ServerScriptService.Server.Persistence.Persistence)",
+            "",
+            "return function (${1:context}, ${2:player: Player})",
+            "    local replica = Persistence.get(${2:player})",
+            "    if not replica then",
+            "        return \"Player Replica not found\"",
+            "    end",
+            "",
+            "    return \"success\"",
+            "end"
+        ],
+        "description": "Inserts a function that retrieves a player's replica via Persistence."
+    },
+    "Fusion Component": {
+        "prefix": "uicomponent",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local FusionUtil = require(ReplicatedStorage.Shared.FusionUtil)",
+            "local fusion = require(ReplicatedStorage.packages.fusion)",
+            "",
+            "local Children = fusion.Children",
+            "type UsedAs<T> = fusion.UsedAs<T>",
+            "",
+            "local function constructor(",
+            "    scope: FusionUtil.Scope,",
+            "    props: {",
+            "        $1",
+            "    }",
+            "): fusion.Child",
+            "    return scope:New(\"Frame\")({",
+            "        Size = UDim2.fromScale(0.5, 0.5),",
+            "        Position = UDim2.fromScale(0.5, 0.5),",
+            "        AnchorPoint = Vector2.new(0.5, 0.5)",
+            "    })",
+            "end",
+            "",
+            "return constructor"
+        ],
+        "description": "A constructor function snippet using Fusion."
+    },
+    "Story Component": {
+        "prefix": "story",
+        "body": [
+            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local FusionUtil = require(ReplicatedStorage.Shared.FusionUtil)",
+            "local UILabs = require(ReplicatedStorage.packages.UILabs)",
+            "local fusion = require(ReplicatedStorage.packages.fusion)",
+            "",
+            "local story = UILabs.CreateFusionStory({",
+            "    fusion = fusion,",
+            "    controls = {},",
+            "}, function(props)",
+            "    local scope = FusionUtil.createScope(props.scope)",
+            "    return scope:New(\"Frame\")({",
+            "        Size = UDim2.fromScale(0.5, 0.5),",
+            "    })",
+            "end)",
+            "",
+            "return story"
+        ],
+        "description": "Creates a Fusion Story component named 'story'."
+    }
+}

@@ -19,3 +19,16 @@ autocmd("TextYankPost", {
     vim.highlight.on_yank()
   end,
 })
+
+autocmd({ "BufEnter", "BufWinEnter" }, {
+  pattern = { "*.norg" },
+  command = "set conceallevel=3",
+})
+
+autocmd("FileType", {
+  pattern = "norg",
+  callback = function()
+    vim.opt_local.foldlevelstart = 99
+    -- or: vim.opt_local.foldenable = false
+  end,
+})
