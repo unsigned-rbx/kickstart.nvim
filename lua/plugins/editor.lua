@@ -205,6 +205,20 @@ return {
 			{ "<leader>xw", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", desc = "Buffer diagnostics" },
 			{ "<leader>xl", "<cmd>Trouble loclist toggle<CR>", desc = "Location list" },
 			{ "<leader>xq", "<cmd>Trouble qflist toggle<CR>", desc = "Quickfix list" },
+			{
+				"]x",
+				function()
+					require("trouble").next { mode = "diagnostics", skip_groups = true, jump = true }
+				end,
+				desc = "Next diagnostic (Trouble)",
+			},
+			{
+				"[x",
+				function()
+					require("trouble").prev { mode = "diagnostics", skip_groups = true, jump = true }
+				end,
+				desc = "Prev diagnostic (Trouble)",
+			},
 		},
 	},
 	{
@@ -234,5 +248,8 @@ return {
 		config = function()
 			local test = 3
 		end,
+	},
+	{
+		"artemave/workspace-diagnostics.nvim",
 	},
 }

@@ -60,3 +60,12 @@ keymap("v", "<S-k>", ":m '<-2<CR>gv=gv", opts)
 
 -- Telescope diagnostics (shows all diagnostics across workspace)
 keymap("n", "<leader>sd", ":Telescope diagnostics<CR>", { desc = "Search all diagnostics" })
+
+keymap("n", "<leader>x", "", {
+	noremap = true,
+	callback = function()
+		for _, client in ipairs(vim.lsp.get_clients()) do
+			require("workspace-diagnostics").populate_workspace_diagnostics(client, 0)
+		end
+	end,
+})

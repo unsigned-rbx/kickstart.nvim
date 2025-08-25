@@ -40,6 +40,10 @@ return {
 						"./types/Persistence.d.luau",
 						"./types/Default.d.luau",
 						"./types/Enums.d.luau",
+						"./types/Network.d.luau",
+						"./types/PlayerReplica.d.luau",
+						"./types/Replica.d.luau",
+						"./types/Bathroom.d.luau",
 					},
 				},
 				platform = {
@@ -164,6 +168,7 @@ return {
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
 					if client and client.supports_method(vim.lsp.protocol.Methods.textDocument_documentHighlight) then
 						local highlight_augroup = vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+
 						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 							buffer = event.buf,
 							group = highlight_augroup,
