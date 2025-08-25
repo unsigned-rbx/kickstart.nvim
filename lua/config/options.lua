@@ -57,4 +57,6 @@ end)
 vim.opt.formatoptions:remove "r"
 vim.opt.formatoptions:remove "o"
 
--- vim.cmd.colorscheme "kanagawa-dragon"
+vim.diagnostic.config {
+	virtual_text = { severity_sort = true },
+}

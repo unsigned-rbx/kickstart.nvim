@@ -47,6 +47,7 @@ return {
 				},
 				plugin = {
 					enabled = true,
+					port = 3667,
 				},
 				settings = {
 					["luau-lsp"] = {

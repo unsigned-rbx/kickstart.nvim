@@ -188,4 +188,51 @@ return {
 			-- refer to the configuration section below
 		},
 	},
+	{
+		"folke/trouble.nvim",
+		branch = "main", -- v3
+		event = "LspAttach",
+		dependencies = { "nvim-tree/nvim-web-devicons" },
+		opts = {
+			auto_close = true, -- close when no diagnostics
+			use_diagnostic_signs = true, -- use your theme’s DiagnosticSign* icons
+			modes = {
+				diagnostics = { preview = { type = "float", border = "rounded" } },
+			},
+		},
+		keys = {
+			{ "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", desc = "Diagnostics (Trouble)" },
+			{ "<leader>xw", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", desc = "Buffer diagnostics" },
+			{ "<leader>xl", "<cmd>Trouble loclist toggle<CR>", desc = "Location list" },
+			{ "<leader>xq", "<cmd>Trouble qflist toggle<CR>", desc = "Quickfix list" },
+		},
+	},
+	{
+		"chikko80/error-lens.nvim",
+		-- event = "VeryLazy",
+		dependencies = { "nvim-telescope/telescope.nvim" },
+		opts = {
+			auto_adjust = {
+				enable = false,
+				-- fallback_bg_color = "#281478", -- mandatory if enable true (e.g. #281478)
+				-- step = 7, -- inc: colors should be brighter/darker
+				-- total = 30, -- steps of blender
+			},
+			prefix = 4, -- distance code <-> diagnostic message
+			-- default colors
+			-- colors = {
+			-- 	error_fg = "#FF6363", -- diagnostic font color
+			-- 	error_bg = "#4B252C", -- diagnostic line color
+			-- 	warn_fg = "#FA973A",
+			-- 	warn_bg = "#403733",
+			-- 	info_fg = "#5B38E8",
+			-- 	info_bg = "#281478",
+			-- 	hint_fg = "#25E64B",
+			-- 	hint_bg = "#147828",
+			-- },
+		},
+		config = function()
+			local test = 3
+		end,
+	},
 }
