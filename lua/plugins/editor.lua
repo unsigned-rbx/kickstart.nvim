@@ -1,0 +1,191 @@
+return {
+	{
+		"nvim-tree/nvim-tree.lua",
+		version = "*",
+		lazy = false,
+		dependencies = {
+			"nvim-tree/nvim-web-devicons",
+		},
+		config = function()
+			require("nvim-tree").setup {
+				view = {
+					signcolumn = "yes",
+					float = {
+						enable = true,
+						quit_on_focus_loss = true,
+						open_win_config = function()
+							local columns, lines = vim.o.columns, vim.o.lines
+							local w = math.floor(columns * 0.28)
+							local h = math.floor(lines * 0.90)
+							return {
+								relative = "editor",
+								border = "rounded",
+								width = w,
+								height = h,
+								row = math.floor((lines - h) / 2),
+								col = math.floor((columns - w) / 2),
+							}
+						end,
+					},
+				},
+
+				renderer = {
+					group_empty = true,
+					highlight_git = true,
+					highlight_opened_files = "name",
+					indent_markers = { enable = true, inline_arrows = true },
+					icons = {
+						show = { file = true, folder = true, folder_arrow = true, git = true, modified = true },
+						glyphs = {
+							folder = { arrow_closed = "", arrow_open = "" },
+							git = {
+								unstaged = "",
+								staged = "S",
+								unmerged = "",
+								renamed = "➜",
+								untracked = "U",
+								deleted = "",
+								ignored = "◌",
+							},
+						},
+					},
+				},
+
+				diagnostics = {
+					enable = true,
+					show_on_dirs = true,
+					icons = { hint = "󰌵", info = "", warning = "", error = "" },
+				},
+
+				modified = { enable = true, show_on_dirs = true },
+
+				git = { enable = true, ignore = false },
+
+				filters = { dotfiles = false, git_ignored = true, custom = { "^.git$", "node_modules", ".cache" } },
+
+				actions = {
+					open_file = { quit_on_open = true, resize_window = true }, -- auto-close tree when opening a file
+				},
+				-- update_focused_file = {
+				-- 	enable = true, -- Automatically focus the opened file
+				-- 	update_cwd = true, -- Optionally update the working directory
+				-- },
+				-- sort = {
+				-- 	sorter = "case_sensitive",
+				-- },
+				-- view = {
+				-- 	adaptive_size = true, -- Adjust the width of the tree dynamically
+				-- 	--width = 40
+				-- },
+				-- renderer = {
+				-- 	group_empty = true,
+				-- },
+				-- git = {
+				-- 	enable = true,
+				-- 	ignore = false,
+				-- },
+				-- filters = {
+				-- 	dotfiles = true,
+				-- },
+				-- on_attach = function(bufnr)
+				-- 	local api = require "nvim-tree.api"
+				-- 	-- keep all the built-in mappings
+				-- 	api.config.mappings.default_on_attach(bufnr)
+				--
+				-- 	-- your extra map: close tree with ESC
+				-- 	vim.keymap.set("n", "<Esc>", api.tree.close, {
+				-- 		buffer = bufnr,
+				-- 		noremap = true,
+				-- 		silent = true,
+				-- 		desc = "Close tree",
+				-- 	})
+				--
+			}
+
+			vim.keymap.set(
+				"n",
+				"<leader>f",
+				"<cmd>NvimTreeFindFile<CR>",
+				{ silent = true, noremap = true, desc = "Reveal current file" }
+			)
+		end,
+	},
+	{ -- Fuzzy Finder (files, lsp, etc)
+		"nvim-telescope/telescope.nvim",
+		event = "VimEnter",
+		branch = "0.1.x",
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+			{ -- If encountering errors, see telescope-fzf-native README for installation instructions
+				"nvim-telescope/telescope-fzf-native.nvim",
+				build = "make",
+				cond = function()
+					return vim.fn.executable "make" == 1
+				end,
+			},
+			{ "nvim-telescope/telescope-ui-select.nvim" },
+			{ "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
+		},
+		config = function()
+			require("telescope").setup {
+				extensions = {
+					["ui-select"] = {
+						require("telescope.themes").get_dropdown(),
+					},
+				},
+			}
+
+			pcall(require("telescope").load_extension, "fzf")
+			pcall(require("telescope").load_extension, "ui-select")
+
+			local builtin = require "telescope.builtin"
+			vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[S]earch [H]elp" })
+			vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[S]earch [K]eymaps" })
+			vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "[S]earch [F]iles" })
+			vim.keymap.set("n", "<leader>ss", builtin.builtin, { desc = "[S]earch [S]elect Telescope" })
+			vim.keymap.set("n", "<leader>sw", builtin.grep_string, { desc = "[S]earch current [W]ord" })
+			vim.keymap.set("n", "<leader>sg", builtin.live_grep, { desc = "[S]earch by [G]rep" })
+			vim.keymap.set("n", "<leader>sd", builtin.diagnostics, { desc = "[S]earch [D]iagnostics" })
+			vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "[S]earch [R]esume" })
+			vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
+			vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "[ ] Find existing buffers" })
+
+			-- Slightly advanced example of overriding default behavior and theme
+			vim.keymap.set("n", "<leader>/", function()
+				builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown {
+					winblend = 10,
+					previewer = false,
+				})
+			end, { desc = "[/] Fuzzily search in current buffer" })
+
+			vim.keymap.set("n", "<leader>s/", function()
+				builtin.live_grep {
+					grep_open_files = true,
+					prompt_title = "Live Grep in Open Files",
+				}
+			end, { desc = "[S]earch [/] in Open Files" })
+
+			vim.keymap.set("n", "<leader>sn", function()
+				builtin.find_files { cwd = vim.fn.stdpath "config" }
+			end, { desc = "[S]earch [N]eovim files" })
+		end,
+	},
+
+	-- Autopair support
+	{
+		"windwp/nvim-autopairs",
+		opts = {},
+	},
+	{
+		"NMAC427/guess-indent.nvim",
+		opts = {},
+	},
+	{
+		"gbprod/cutlass.nvim",
+		opts = {
+			-- your configuration comes here
+			-- or don't set opts to use the default settings
+			-- refer to the configuration section below
+		},
+	},
+}
