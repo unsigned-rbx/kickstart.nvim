@@ -37,10 +37,11 @@ return {
 					},
 					["core.completion"] = {
 						config = {
-							engine = "nvim-cmp",
+							-- engine = "nvim-cmp",
+							engine = "blink",
 						},
 					},
-					["core.integrations.nvim-cmp"] = {},
+					["core.integrations.blink"] = {},
 				},
 			}
 		end,

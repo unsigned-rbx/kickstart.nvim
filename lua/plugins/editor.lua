@@ -1,3 +1,23 @@
+local telescope = require "telescope"
+local actions = require "telescope.actions"
+local themes = require "telescope.themes"
+
+-- subtle popup transparency
+vim.o.pumblend = 12
+
+-- nicer highlights (works with most colorschemes)
+vim.api.nvim_set_hl(0, "TelescopeBorder", { link = "FloatBorder" })
+vim.api.nvim_set_hl(0, "TelescopePromptBorder", { link = "FloatBorder" })
+vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { link = "FloatBorder" })
+vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { link = "FloatBorder" })
+vim.api.nvim_set_hl(0, "TelescopeNormal", { link = "NormalFloat" })
+vim.api.nvim_set_hl(0, "TelescopeSelection", { link = "PmenuSel" })
+
+local nerd = vim.g.have_nerd_font
+local prompt_icon = nerd and "   " or "> "
+local caret_icon = nerd and " " or "> "
+local entry_prefix = "  "
+
 return {
 	{
 		"nvim-tree/nvim-tree.lua",
@@ -127,11 +147,97 @@ return {
 			{ "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
 		},
 		config = function()
-			require("telescope").setup {
-				extensions = {
-					["ui-select"] = {
-						require("telescope.themes").get_dropdown(),
+			local ignore_globs = { "**/_Index/**", "node_modules/**" }
+			telescope.setup {
+				defaults = {
+					file_ignore_patterns = { "/_Index/", "/node_modules/" },
+					vimgrep_arguments = (function()
+						local v = require("telescope.config").values.vimgrep_arguments
+						local args = vim.deepcopy(v)
+						table.insert(args, "--hidden")
+						for _, g in ipairs(ignore_globs) do
+							table.insert(args, "--glob")
+							table.insert(args, "!" .. g)
+						end
+						return args
+					end)(),
+					prompt_prefix = prompt_icon,
+					selection_caret = caret_icon,
+					entry_prefix = entry_prefix,
+					results_title = false,
+					dynamic_preview_title = true,
+					sorting_strategy = "ascending",
+					layout_strategy = "flex",
+					layout_config = {
+						prompt_position = "top",
+						width = 0.95,
+						height = 0.90,
+						horizontal = { preview_width = 0.55 },
+						vertical = { preview_height = 0.45 },
 					},
+					winblend = 8,
+					path_display = { "smart" }, -- or { "filename_first" }
+					color_devicons = true,
+					mappings = {
+						i = {
+							["<C-j>"] = actions.move_selection_next,
+							["<C-k>"] = actions.move_selection_previous,
+							["<C-u>"] = false, -- keep insert scrolling intact
+							["<C-d>"] = false,
+						},
+					},
+				},
+
+				-- per-picker looks
+				pickers = {
+					find_files = {
+						previewer = true,
+						sorting_strategy = "ascending",
+						layout_strategy = "flex",
+						layout_config = {
+							prompt_position = "top",
+							width = 0.95,
+							height = 0.90,
+							horizontal = { preview_width = 0.55 },
+							vertical = { preview_height = 0.45 },
+						},
+						hidden = true,
+						no_ignore = true,
+						follow = true,
+						path_display = { "smart" },
+					},
+					buffers = themes.get_dropdown {
+						previewer = false,
+						initial_mode = "normal",
+						sort_lastused = true,
+						ignore_current_buffer = true,
+						mappings = {
+							n = { ["dd"] = actions.delete_buffer },
+							i = { ["<C-x>"] = actions.delete_buffer },
+						},
+					},
+					oldfiles = themes.get_dropdown { previewer = false },
+					live_grep = {
+						additional_args = function()
+							local a = { "--hidden" }
+							for _, g in ipairs(ignore_globs) do
+								table.insert(a, "--glob")
+								table.insert(a, "!" .. g)
+							end
+							return a
+						end,
+					},
+					diagnostics = themes.get_ivy {},
+				},
+
+				extensions = {
+					fzf = {
+						fuzzy = true,
+						override_generic_sorter = true,
+						override_file_sorter = true,
+						case_mode = "smart_case",
+					},
+					["ui-select"] = themes.get_dropdown(),
 				},
 			}
 
@@ -139,12 +245,89 @@ return {
 			pcall(require("telescope").load_extension, "ui-select")
 
 			local builtin = require "telescope.builtin"
+			local make_entry = require "telescope.make_entry"
+			local entry_display = require "telescope.pickers.entry_display"
+			local utils = require "telescope.utils"
+			local sorters = require "telescope.sorters"
+
+			-- highlight for commented results
+			vim.api.nvim_set_hl(0, "TelescopeResultsCommented", { link = "Comment" })
+
+			-- Wrap vimgrep entry maker and tag commented lines
+			local function comment_entry_maker(opts)
+				local gen = make_entry.gen_from_vimgrep(opts or {})
+				local displayer = entry_display.create {
+					separator = " ",
+					items = {
+						{ width = 0.45 }, -- filename
+						{ width = 8 }, -- lnum:col
+						{ remaining = true }, -- text
+					},
+				}
+
+				return function(line)
+					local e = gen(line)
+					if not e then
+						return nil
+					end
+
+					local ext = (e.filename:match "%.([%w_]+)$" or ""):lower()
+					local commented = false
+					if ext == "lua" or ext == "luau" then
+						local cmt = e.text:find "%-%-" -- position of `--`
+						if cmt and (e.col or 1) > cmt then
+							commented = true
+						end
+					end
+					e._commented = commented
+
+					-- custom display with gray filename/text when commented
+					local fname = utils.transform_path(opts, e.filename)
+					e.display = function(entry)
+						return displayer {
+							{ fname, commented and "TelescopeResultsCommented" or "TelescopeResultsFileName" },
+							{ string.format("%d:%d", entry.lnum or 0, entry.col or 0), "TelescopeResultsLineNr" },
+							{ entry.text, commented and "TelescopeResultsCommented" or "TelescopeResultsNormal" },
+						}
+					end
+
+					return e
+				end
+			end
+
+			-- Sorter that pushes commented hits to the bottom
+			local base = sorters.get_fzy_sorter() -- or get_generic_fuzzy_sorter()
+			local demote_comments = sorters.Sorter:new {
+				scoring_function = function(self, prompt, line, entry)
+					local s = base:scoring_function(prompt, line, entry)
+					if not s or s < 0 then
+						return s
+					end
+					if entry._commented then
+						return s + 1e9 -- huge penalty -> bottom with ascending sort
+					end
+					return s
+				end,
+				highlighter = function(self, prompt, display)
+					return base:highlighter(prompt, display)
+				end,
+			}
+
 			vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[S]earch [H]elp" })
 			vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[S]earch [K]eymaps" })
 			vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "[S]earch [F]iles" })
 			vim.keymap.set("n", "<leader>ss", builtin.builtin, { desc = "[S]earch [S]elect Telescope" })
 			vim.keymap.set("n", "<leader>sw", builtin.grep_string, { desc = "[S]earch current [W]ord" })
-			vim.keymap.set("n", "<leader>sg", builtin.live_grep, { desc = "[S]earch by [G]rep" })
+			vim.keymap.set("n", "<leader>sg", function()
+				builtin.live_grep {
+					sorting_strategy = "ascending",
+					entry_maker = comment_entry_maker { path_display = { "smart" } },
+					sorter = demote_comments,
+					additional_args = function()
+						return { "--hidden" }
+					end,
+				}
+			end, { desc = "[S]earch by [G]rep (mark commented hits)" })
 			vim.keymap.set("n", "<leader>sd", builtin.diagnostics, { desc = "[S]earch [D]iagnostics" })
 			vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "[S]earch [R]esume" })
 			vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })

@@ -1,5 +1,3 @@
-vim.treesitter.language.register("lua", "luau")
-
 return {
 	{ -- Highlight, edit, and navigate code
 		"nvim-treesitter/nvim-treesitter",

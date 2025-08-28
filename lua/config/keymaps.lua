@@ -69,3 +69,5 @@ keymap("n", "<leader>x", "", {
 		end
 	end,
 })
+
+keymap("v", "p", "p=`]<C-o>", { noremap = true })
