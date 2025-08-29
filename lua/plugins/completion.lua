@@ -4,9 +4,9 @@ vim.o.pumblend = 12
 -- optional: tidy up cmp highlight links (works with most themes)
 vim.api.nvim_set_hl(0, "CmpBorder", { link = "FloatBorder" })
 vim.api.nvim_set_hl(0, "CmpPmenu", { link = "NormalFloat" })
-vim.api.nvim_set_hl(0, "CmpSel", { link = "PmenuSel" })
 vim.api.nvim_set_hl(0, "CmpDoc", { link = "NormalFloat" })
 vim.api.nvim_set_hl(0, "CmpDocBorder", { link = "FloatBorder" })
+vim.api.nvim_set_hl(0, "CmpSel", { bg = "#3a3f4b", fg = "NONE" }) -- or: { link = "Visual" }
 return {
 	-- {
 	-- 	"Saghen/blink.cmp",

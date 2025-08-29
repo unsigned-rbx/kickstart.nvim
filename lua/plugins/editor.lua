@@ -18,6 +18,14 @@ local prompt_icon = nerd and "   " or "> "
 local caret_icon = nerd and " " or "> "
 local entry_prefix = "  "
 
+local function dim_gitignored()
+	-- file name + icon for ignored entries
+	vim.api.nvim_set_hl(0, "NvimTreeGitIgnored", { link = "Comment" })
+	vim.api.nvim_set_hl(0, "NvimTreeGitIgnoredIcon", { link = "Comment" })
+end
+dim_gitignored()
+vim.api.nvim_create_autocmd("ColorScheme", { callback = dim_gitignored })
+
 return {
 	{
 		"nvim-tree/nvim-tree.lua",
@@ -81,11 +89,12 @@ return {
 
 				git = { enable = true, ignore = false },
 
-				filters = { dotfiles = false, git_ignored = true, custom = { "^.git$", "node_modules", ".cache" } },
+				filters = { dotfiles = false, git_ignored = false, custom = { "^.git$", "node_modules", ".cache" } },
 
 				actions = {
 					open_file = { quit_on_open = true, resize_window = true }, -- auto-close tree when opening a file
 				},
+
 				-- update_focused_file = {
 				-- 	enable = true, -- Automatically focus the opened file
 				-- 	update_cwd = true, -- Optionally update the working directory

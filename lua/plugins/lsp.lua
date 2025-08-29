@@ -1,3 +1,20 @@
+vim.api.nvim_create_autocmd("FileType", {
+	pattern = "luau",
+	callback = function()
+		require("luau-lsp.server").setup()
+	end,
+	once = true,
+})
+
+vim.api.nvim_create_user_command("LuauLsp", function(opts)
+	require("luau-lsp.command").execute(opts.args)
+end, {
+	nargs = "+",
+	complete = function(...)
+		return require("luau-lsp.command").complete(...)
+	end,
+})
+
 local function rojo_project()
 	return vim.fs.root(0, function(name)
 		return name:match ".+%.project%.json$"
@@ -17,12 +34,65 @@ if rojo_project() then
 	}
 end
 
+local function start()
+	vim.lsp.enable "luau-lsp"
+
+	require("luau-lsp.roblox").start()
+
+	-- HACK: nvim 0.11 does not start the server right after enabling
+	if vim.fn.has "nvim-0.12" == 0 then
+		vim
+			.iter(vim.api.nvim_list_bufs())
+			:filter(function(bufnr)
+				return vim.bo[bufnr].filetype == "luau"
+			end)
+			:each(function(bufnr)
+				vim.api.nvim_exec_autocmds("FileType", {
+					group = "nvim.lsp.enable",
+					buffer = bufnr,
+					modeline = false,
+				})
+			end)
+	end
+end
+local function get_json_schemas()
+	local schemas = require("schemastore").json.schemas()
+
+	-- Add the rojo json schema for rojo project files
+	table.insert(schemas, {
+		fileMatch = { "*.project.json" },
+		url = "https://raw.githubusercontent.com/rojo-rbx/vscode-rojo/master/schemas/project.template.schema.json",
+	})
+
+	return schemas
+end
+
 return {
 	{
 		"lopi-py/luau-lsp.nvim",
 		config = function()
+			vim.lsp.config("luau-lsp", {
+				settings = {
+					["luau-lsp"] = {
+						ignoreGlobs = { "**/_Index/**", "node_modules/**" },
+						completion = {
+							imports = {
+								enabled = true,
+								ignoreGlobs = { "**/_Index/**", "node_modules/**" },
+							},
+						},
+					},
+				},
+			})
+
+			vim.schedule_wrap(start)
+
 			-- See https://github.com/lopi-py/luau-lsp.nvim
 			require("luau-lsp").setup {
+				plugin = {
+					enabled = true,
+					port = 3667,
+				},
 				sourcemap = {
 					enabled = true,
 					autogenerate = true, -- automatic generation when the server is attached
@@ -49,10 +119,6 @@ return {
 				platform = {
 					type = rojo_project() and "roblox" or "standard",
 				},
-				plugin = {
-					enabled = true,
-					port = 3667,
-				},
 			}
 
 			vim.lsp.config("*", {
@@ -60,19 +126,6 @@ return {
 					workspace = {
 						didChangeWatchedFiles = {
 							dynamicRegistration = true,
-						},
-					},
-				},
-			})
-			vim.lsp.config("luau-lsp", {
-				settings = {
-					["luau-lsp"] = {
-						ignoreGlobs = { "**/_Index/**", "node_modules/**" },
-						completion = {
-							imports = {
-								enabled = true,
-								ignoreGlobs = { "**/_Index/**", "node_modules/**" },
-							},
 						},
 					},
 				},
@@ -93,6 +146,7 @@ return {
 			{ "williamboman/mason.nvim", opts = {} },
 			"williamboman/mason-lspconfig.nvim",
 			"WhoIsSethDaniel/mason-tool-installer.nvim",
+			"b0o/SchemaStore.nvim",
 
 			-- Useful status updates for LSP.
 			{ "j-hui/fidget.nvim", opts = {} },
@@ -175,7 +229,15 @@ return {
 							end,
 						})
 					end
-
+					vim.lsp.config("jsonls", {
+						settings = {
+							json = {
+								-- Send custom json schemas to jsonls to provide its features when you open a json file
+								schemas = get_json_schemas(),
+								validate = { enable = true },
+							},
+						},
+					})
 					-- The following code creates a keymap to toggle inlay hints in your
 					-- code, if the language server you are using supports them
 					--
@@ -185,6 +247,13 @@ return {
 							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf })
 						end, "[T]oggle Inlay [H]ints")
 					end
+
+					vim.lsp.enable {
+						"lua_ls",
+						"eslint",
+						"jsonls",
+						"vtsls",
+					}
 				end,
 			})
 
