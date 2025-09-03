@@ -284,4 +284,28 @@ return {
 			}
 		end,
 	},
+	{
+		"lewis6991/hover.nvim",
+		config = function()
+			require("hover").setup {
+				init = function()
+					require "hover.providers.lsp"
+					require "hover.providers.gh"
+					require "hover.providers.diagnostic"
+					require "hover.providers.man"
+				end,
+				preview_opts = {
+					border = "rounded",
+					max_width = 120,
+					max_height = 40,
+					wrap = true,
+				},
+				title = true,
+			}
+
+			-- Override the default K mapping
+			vim.keymap.set("n", "K", require("hover").hover, { desc = "hover.nvim" })
+			vim.keymap.set("n", "gK", require("hover").hover_select, { desc = "hover.nvim (select)" })
+		end,
+	},
 }

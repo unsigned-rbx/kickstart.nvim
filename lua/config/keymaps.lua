@@ -70,4 +70,15 @@ keymap("n", "<leader>x", "", {
 	end,
 })
 
-keymap("v", "p", "p=`]<C-o>", { noremap = true })
+-- Map Escape to clear search highlight
+keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", { noremap = true, silent = true })
+
+keymap("n", "<leader>dw", function()
+	-- Save cursor position
+	local pos = vim.api.nvim_win_get_cursor(0)
+
+	-- Delete word backward
+	vim.cmd "normal! db"
+
+	-- Optional: adjust cursor position if needed
+end, { desc = "Delete word and go back" })

@@ -89,11 +89,41 @@ return {
 
 				git = { enable = true, ignore = false },
 
-				filters = { dotfiles = false, git_ignored = false, custom = { "^.git$", "node_modules", ".cache" } },
+				filters = {
+					dotfiles = false, -- Hide dotfiles by default
+					git_clean = false, -- Hide clean git files
+					no_buffer = false, -- Hide files not in buffer list
+					git_ignored = true, -- Hide git ignored files (default: true)
+					custom = { -- Custom patterns to always hide
+						"node_modules",
+						".cache",
+						"__pycache__",
+						"*.pyc",
+						".DS_Store",
+					},
+					exclude = { -- Exceptions to the custom filters
+						".gitignore",
+						".env.example",
+					},
+				},
+				live_filter = {
+					prefix = "[FILTER]: ", -- Text shown before filter
+					always_show_folders = true, -- Keep folders visible even when filtered
+				},
 
 				actions = {
 					open_file = { quit_on_open = true, resize_window = true }, -- auto-close tree when opening a file
 				},
+
+				on_attach = function(bufnr)
+					local api = require "nvim-tree.api"
+
+					-- Default mappings
+					api.config.mappings.default_on_attach(bufnr)
+
+					-- Custom mapping to close with Escape
+					vim.keymap.set("n", "<Esc>", api.tree.close, { buffer = bufnr, noremap = true, silent = true })
+				end,
 
 				-- update_focused_file = {
 				-- 	enable = true, -- Automatically focus the opened file
@@ -156,44 +186,136 @@ return {
 			{ "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
 		},
 		config = function()
-			local ignore_globs = { "**/_Index/**", "node_modules/**" }
+			local ignore_globs = {
+				-- Your existing patterns
+				"**/_Index/**",
+				"node_modules/**",
+
+				-- Git and version control
+				".git/**",
+				".svn/**",
+				".hg/**",
+
+				-- Build/dist directories
+				"dist/**",
+				"build/**",
+				".next/**",
+				".nuxt/**",
+				"target/**", -- Rust
+				"__pycache__/**", -- Python
+				"*.egg-info/**", -- Python
+
+				-- IDE/Editor files
+				".vscode/**",
+				".idea/**",
+				"*.swp",
+				"*.swo",
+				"*~",
+
+				-- OS files
+				".DS_Store",
+				"Thumbs.db",
+
+				-- Logs and temp files
+				"*.log",
+				"tmp/**",
+				"temp/**",
+			}
+
+			local telescope = require "telescope"
+			local actions = require "telescope.actions"
+			local themes = require "telescope.themes"
+
+			-- Define your icons here or import them from your theme
+			local prompt_icon = "🔍 "
+			local caret_icon = "❯ "
+			local entry_prefix = "  "
+
 			telescope.setup {
 				defaults = {
-					file_ignore_patterns = { "/_Index/", "/node_modules/" },
-					vimgrep_arguments = (function()
-						local v = require("telescope.config").values.vimgrep_arguments
-						local args = vim.deepcopy(v)
-						table.insert(args, "--hidden")
-						for _, g in ipairs(ignore_globs) do
-							table.insert(args, "--glob")
-							table.insert(args, "!" .. g)
-						end
-						return args
-					end)(),
-					prompt_prefix = prompt_icon,
-					selection_caret = caret_icon,
-					entry_prefix = entry_prefix,
-					results_title = false,
-					dynamic_preview_title = true,
-					sorting_strategy = "ascending",
-					layout_strategy = "flex",
-					layout_config = {
-						prompt_position = "top",
-						width = 0.95,
-						height = 0.90,
-						horizontal = { preview_width = 0.55 },
-						vertical = { preview_height = 0.45 },
+					-- CRITICAL: Increase scrolling limit from default 250 to handle large results
+					temp__scrolling_limit = 10000,
+
+					-- Optimize ripgrep arguments for M4 Max
+					vimgrep_arguments = {
+						"rg",
+						"--color=never",
+						"--no-heading",
+						"--with-filename",
+						"--line-number",
+						"--column",
+						"--smart-case",
+						"--threads=12", -- Match M4 Max performance cores
+						"--max-count=1000", -- Prevent infinite result processing
+						"--trim", -- Performance optimization
 					},
-					winblend = 8,
-					path_display = { "smart" }, -- or { "filename_first" }
-					color_devicons = true,
-					mappings = {
-						i = {
-							["<C-j>"] = actions.move_selection_next,
-							["<C-k>"] = actions.move_selection_previous,
-							["<C-u>"] = false, -- keep insert scrolling intact
-							["<C-d>"] = false,
-						},
+
+					-- Disable performance-killing settings
+					path_display = { "truncate" }, -- NOT "smart" which is slow
+					sorting_strategy = "ascending",
+
+					-- Layout optimizations
+					layout_config = {
+						preview_cutoff = 120,
+						width = 0.75,
+						height = 0.60,
+					},
+				},
+
+				file_ignore_patterns = {
+					"/_Index/",
+					"/node_modules/",
+					"/.git/",
+					"/dist/",
+					"/build/",
+					"/.next/",
+					"/.nuxt/",
+					"/target/",
+					"/__pycache__/",
+					"/%.egg%-info/",
+					"/%.vscode/",
+					"/%.idea/",
+					"%.swp$",
+					"%.swo$",
+					"%.log$",
+					"/tmp/",
+					"/temp/",
+					"%.DS_Store$",
+					"Thumbs%.db$",
+				},
+				vimgrep_arguments = (function()
+					local v = require("telescope.config").values.vimgrep_arguments
+					local args = vim.deepcopy(v)
+					table.insert(args, "--hidden")
+					for _, g in ipairs(ignore_globs) do
+						table.insert(args, "--glob")
+						table.insert(args, "!" .. g)
+					end
+					return args
+				end)(),
+				prompt_prefix = prompt_icon,
+				selection_caret = caret_icon,
+				entry_prefix = entry_prefix,
+				results_title = false,
+				dynamic_preview_title = true,
+				sorting_strategy = "ascending",
+				layout_strategy = "flex",
+				layout_config = {
+					prompt_position = "top",
+					width = 0.95,
+					height = 0.90,
+					horizontal = { preview_width = 0.55 },
+					vertical = { preview_height = 0.45 },
+				},
+				winblend = 8,
+				path_display = { "smart" }, -- or { "filename_first" }
+				color_devicons = true,
+				mappings = {
+					i = {
+						["<C-j>"] = actions.move_selection_next,
+						["<C-k>"] = actions.move_selection_previous,
+						["<C-u>"] = false, -- keep insert scrolling intact
+						["<C-d>"] = false,
 					},
 				},
 
@@ -211,7 +333,7 @@ return {
 							vertical = { preview_height = 0.45 },
 						},
 						hidden = true,
-						no_ignore = true,
+						-- Removed no_ignore = true to respect .gitignore files
 						follow = true,
 						path_display = { "smart" },
 					},
@@ -227,6 +349,17 @@ return {
 					},
 					oldfiles = themes.get_dropdown { previewer = false },
 					live_grep = {
+						layout_strategy = "horizontal",
+						layout_config = {
+							prompt_position = "top",
+							width = 0.98,
+							height = 0.95,
+							preview_width = 0.30, -- This controls the preview size
+							-- Remove results_width - it's not a valid key
+						},
+						path_display = { "truncate" },
+						results_title = false,
+						prompt_title = "Live Grep",
 						additional_args = function()
 							local a = { "--hidden" }
 							for _, g in ipairs(ignore_globs) do
@@ -413,6 +546,7 @@ return {
 			},
 		},
 	},
+
 	{
 		"chikko80/error-lens.nvim",
 		-- event = "VeryLazy",
@@ -474,5 +608,24 @@ return {
 				window_overlap_clear_ft_ignore = { "cmp_menu", "cmp_docs", "" },
 			}
 		end,
+	},
+	{
+		"kdheepak/lazygit.nvim",
+		cmd = {
+			"LazyGit",
+			"LazyGitConfig",
+			"LazyGitCurrentFile",
+			"LazyGitFilter",
+			"LazyGitFilterCurrentFile",
+		},
+		-- optional for floating window border decoration
+		dependencies = {
+			"nvim-lua/plenary.nvim",
+		},
+		-- setting the keybinding for LazyGit with 'keys' is recommended in
+		-- order to load the plugin when the command is run for the first time
+		keys = {
+			{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "Open lazy git" },
+		},
 	},
 }

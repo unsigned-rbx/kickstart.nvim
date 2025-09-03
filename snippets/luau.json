@@ -1,4 +1,30 @@
 {
+    "Define Fusion Frame": {
+        "prefix": "component",
+        "body": [
+            "local ReplicatedStorage = game:GetService \"ReplicatedStorage\"",
+            "",
+            "local FusionUtil = require(ReplicatedStorage.Shared.FusionUtil)",
+            "local fusion = require(ReplicatedStorage.packages.fusion)",
+            "",
+            "type UsedAs<T> = fusion.UsedAs<T>",
+            "type Value<T> = fusion.Value<T>",
+            "",
+            "local Children = fusion.Children",
+            "",
+            "return function(",
+            "\tscope: FusionUtil.Scope,",
+            "\tprops: {",
+            "\t\tparent: UsedAs<Instance>?,",
+            "\t}",
+            "): fusion.Child",
+            "\treturn scope:New \"Frame\" {",
+            "\t\tParent = props.parent,",
+            "\t}",
+            "end"
+        ],
+        "description": "Creates a Fusion frame with a specified parent."
+    },
     "Define Command Table": {
         "prefix": "command",
         "body": [
@@ -35,53 +61,69 @@
         ],
         "description": "Inserts a function that retrieves a player's replica via Persistence."
     },
-    "Fusion Component": {
-        "prefix": "uicomponent",
+    "Define Class": {
+        "prefix": "class",
         "body": [
-            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
-            "local FusionUtil = require(ReplicatedStorage.Shared.FusionUtil)",
-            "local fusion = require(ReplicatedStorage.packages.fusion)",
+            "local ReplicatedStorage = game:GetService \"ReplicatedStorage\"",
+            "local UID = require(ReplicatedStorage.Shared.util.UID)",
+            "local Trove = require(ReplicatedStorage.packages.Trove)",
             "",
-            "local Children = fusion.Children",
-            "type UsedAs<T> = fusion.UsedAs<T>",
+            "local ${1:ClassName} = {}",
+            "${1:ClassName}.__index = ${1:ClassName}",
             "",
-            "local function constructor(",
-            "    scope: FusionUtil.Scope,",
-            "    props: {",
-            "        $1",
-            "    }",
-            "): fusion.Child",
-            "    return scope:New(\"Frame\")({",
-            "        Size = UDim2.fromScale(0.5, 0.5),",
-            "        Position = UDim2.fromScale(0.5, 0.5),",
-            "        AnchorPoint = Vector2.new(0.5, 0.5)",
-            "    })",
+            "type ${1:ClassName}Proto = {",
+            "\t-- properties",
+            "\tguid: string,",
+            "\ttrove: Trove.Trove,",
+            "",
+            "\t-- functions",
+            "\tdestroy: () -> nil,",
+            "}",
+            "",
+            "export type ${1:ClassName} = typeof(setmetatable({} :: ${1:ClassName}Proto, ${1:ClassName}))",
+            "export type Props = {}",
+            "",
+            "function ${1:ClassName}.new(props: Props)",
+            "\tlocal self = setmetatable({} :: ${1:ClassName}Proto, ${1:ClassName})",
+            "",
+            "\tself.guid = UID.generateUID()",
+            "\tself.trove = Trove.new()",
+            "",
+            "\treturn self",
             "end",
             "",
-            "return constructor"
+            "function ${1:ClassName}.destroy(self: ${1:ClassName})",
+            "\tself.trove:Destroy()",
+            "end",
+            "",
+            "return ${1:ClassName}"
         ],
-        "description": "A constructor function snippet using Fusion."
+        "description": "Creates a new class with a specified name."
     },
-    "Story Component": {
+    "Define Fusion Story": {
         "prefix": "story",
         "body": [
-            "local ReplicatedStorage = game:GetService(\"ReplicatedStorage\")",
+            "local ReplicatedStorage = game:GetService \"ReplicatedStorage\"",
+            "",
             "local FusionUtil = require(ReplicatedStorage.Shared.FusionUtil)",
             "local UILabs = require(ReplicatedStorage.packages.UILabs)",
             "local fusion = require(ReplicatedStorage.packages.fusion)",
             "",
-            "local story = UILabs.CreateFusionStory({",
-            "    fusion = fusion,",
-            "    controls = {},",
+            "return UILabs.CreateFusionStory({",
+            "\tfusion = fusion,",
+            "\tcontrols = {",
+            "\t},",
             "}, function(props)",
-            "    local scope = FusionUtil.createScope(props.scope)",
-            "    return scope:New(\"Frame\")({",
-            "        Size = UDim2.fromScale(0.5, 0.5),",
-            "    })",
-            "end)",
+            "\tlocal scope = FusionUtil.createScope(props.scope)",
+            "\tlocal parent = props.target",
             "",
-            "return story"
-        ],
-        "description": "Creates a Fusion Story component named 'story'."
+            "\tlocal component = scope:New \"Frame\" {",
+            "\t\tParent = parent,",
+            "\t\tSize = UDim2.fromScale(0.3, 0.3),",
+            "\t\tPosition = UDim2.fromScale(0.5, 0.5),",
+            "\t\tAnchorPoint = Vector2.new(0.5, 0.5),",
+            "\t}",
+            "end)"
+        ]
     }
 }

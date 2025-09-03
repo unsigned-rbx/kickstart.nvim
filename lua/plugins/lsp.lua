@@ -1,20 +1,3 @@
-vim.api.nvim_create_autocmd("FileType", {
-	pattern = "luau",
-	callback = function()
-		require("luau-lsp.server").setup()
-	end,
-	once = true,
-})
-
-vim.api.nvim_create_user_command("LuauLsp", function(opts)
-	require("luau-lsp.command").execute(opts.args)
-end, {
-	nargs = "+",
-	complete = function(...)
-		return require("luau-lsp.command").complete(...)
-	end,
-})
-
 local function rojo_project()
 	return vim.fs.root(0, function(name)
 		return name:match ".+%.project%.json$"
@@ -34,27 +17,6 @@ if rojo_project() then
 	}
 end
 
-local function start()
-	vim.lsp.enable "luau-lsp"
-
-	require("luau-lsp.roblox").start()
-
-	-- HACK: nvim 0.11 does not start the server right after enabling
-	if vim.fn.has "nvim-0.12" == 0 then
-		vim
-			.iter(vim.api.nvim_list_bufs())
-			:filter(function(bufnr)
-				return vim.bo[bufnr].filetype == "luau"
-			end)
-			:each(function(bufnr)
-				vim.api.nvim_exec_autocmds("FileType", {
-					group = "nvim.lsp.enable",
-					buffer = bufnr,
-					modeline = false,
-				})
-			end)
-	end
-end
 local function get_json_schemas()
 	local schemas = require("schemastore").json.schemas()
 
@@ -85,8 +47,6 @@ return {
 				},
 			})
 
-			vim.schedule_wrap(start)
-
 			-- See https://github.com/lopi-py/luau-lsp.nvim
 			require("luau-lsp").setup {
 				plugin = {
@@ -111,7 +71,6 @@ return {
 						"./types/Default.d.luau",
 						"./types/Enums.d.luau",
 						"./types/Network.d.luau",
-						"./types/PlayerReplica.d.luau",
 						"./types/Replica.d.luau",
 						"./types/Bathroom.d.luau",
 					},
@@ -376,14 +335,14 @@ return {
 		event = { "BufWritePre" },
 		cmd = { "ConformInfo" },
 		keys = {
-			{
-				"<leader>fb",
-				function()
-					require("conform").format { async = true, lsp_format = "fallback" }
-				end,
-				mode = "",
-				desc = "[F]ormat buffer",
-			},
+			-- {
+			-- 	"<leader>fb",
+			-- 	function()
+			-- 		require("conform").format { async = true, lsp_format = "fallback" }
+			-- 	end,
+			-- 	mode = "",
+			-- 	desc = "[F]ormat buffer",
+			-- },
 		},
 		opts = {
 			notify_on_error = false,
