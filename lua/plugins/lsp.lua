@@ -17,6 +17,23 @@ if rojo_project() then
 	}
 end
 
+local function get_project_type_defs()
+	local root = vim.fs.root(0, { ".git", "wally.toml", "package.json", "roproject.json" }) or vim.loop.cwd()
+
+	local type_dir = root .. "/types"
+	if vim.fn.isdirectory(type_dir) == 0 then
+		return {} -- no "types" folder in this project
+	end
+
+	return vim.fs.find(function(name)
+		return name:match "%.d%.luau$" -- only pick .d.luau files
+	end, {
+		path = type_dir,
+		type = "file",
+		limit = math.huge,
+	})
+end
+
 local function get_json_schemas()
 	local schemas = require("schemastore").json.schemas()
 
@@ -66,14 +83,15 @@ return {
 					},
 				},
 				types = {
-					definition_files = {
-						"./types/Persistence.d.luau",
-						"./types/Default.d.luau",
-						"./types/Enums.d.luau",
-						"./types/Network.d.luau",
-						"./types/Replica.d.luau",
-						"./types/Bathroom.d.luau",
-					},
+					definition_files = get_project_type_defs(),
+					-- definition_files = {
+					-- 	"./types/Persistence.d.luau",
+					-- 	"./types/Default.d.luau",
+					-- 	"./types/Enums.d.luau",
+					-- 	"./types/Network.d.luau",
+					-- 	"./types/Replica.d.luau",
+					-- 	"./types/Bathroom.d.luau",
+					-- },
 				},
 				platform = {
 					type = rojo_project() and "roblox" or "standard",
@@ -108,7 +126,20 @@ return {
 			"b0o/SchemaStore.nvim",
 
 			-- Useful status updates for LSP.
-			{ "j-hui/fidget.nvim", opts = {} },
+			{
+				"j-hui/fidget.nvim",
+				opts = {},
+				config = function()
+					require("fidget").setup {
+						notification = {
+							window = {
+								winblend = 0, -- 0 = no "frosted glass"
+								border = "none", -- optional, removes the box line
+							},
+						},
+					}
+				end,
+			},
 
 			-- Allows extra capabilities provided by nvim-cmp
 			-- "hrsh7th/cmp-nvim-lsp",

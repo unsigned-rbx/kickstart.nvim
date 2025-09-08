@@ -35,6 +35,9 @@ autocmd("LspAttach", {
 	end,
 })
 
--- autocmd("LspAttach", {
--- 	callback = function(event) end,
--- })
+autocmd("VimResized", {
+	callback = function()
+		vim.cmd "wincmd ="
+	end,
+	desc = "Auto-balance windows on resize",
+})

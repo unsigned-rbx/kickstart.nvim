@@ -37,24 +37,10 @@ return {
 		config = function()
 			require("nvim-tree").setup {
 				view = {
+					side = "left", -- docked on the left
+					width = 35, -- pick a width you like
 					signcolumn = "yes",
-					float = {
-						enable = true,
-						quit_on_focus_loss = true,
-						open_win_config = function()
-							local columns, lines = vim.o.columns, vim.o.lines
-							local w = math.floor(columns * 0.28)
-							local h = math.floor(lines * 0.90)
-							return {
-								relative = "editor",
-								border = "rounded",
-								width = w,
-								height = h,
-								row = math.floor((lines - h) / 2),
-								col = math.floor((columns - w) / 2),
-							}
-						end,
-					},
+					-- remove the `float = { ... }` block
 				},
 
 				renderer = {
@@ -90,7 +76,7 @@ return {
 				git = { enable = true, ignore = false },
 
 				filters = {
-					dotfiles = false, -- Hide dotfiles by default
+					dotfiles = true, -- Hide dotfiles by default
 					git_clean = false, -- Hide clean git files
 					no_buffer = false, -- Hide files not in buffer list
 					git_ignored = true, -- Hide git ignored files (default: true)
@@ -112,7 +98,7 @@ return {
 				},
 
 				actions = {
-					open_file = { quit_on_open = true, resize_window = true }, -- auto-close tree when opening a file
+					open_file = { quit_on_open = false, resize_window = true }, -- auto-close tree when opening a file
 				},
 
 				on_attach = function(bufnr)
@@ -121,6 +107,7 @@ return {
 					-- Default mappings
 					api.config.mappings.default_on_attach(bufnr)
 
+					vim.wo.winfixwidth = true
 					-- Custom mapping to close with Escape
 					vim.keymap.set("n", "<Esc>", api.tree.close, { buffer = bufnr, noremap = true, silent = true })
 				end,

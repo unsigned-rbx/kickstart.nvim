@@ -82,3 +82,23 @@ keymap("n", "<leader>dw", function()
 
 	-- Optional: adjust cursor position if needed
 end, { desc = "Delete word and go back" })
+
+-- Restart only the LSP client(s) attached to the current buffer
+keymap("n", "<leader>rf", function()
+	local bufnr = vim.api.nvim_get_current_buf()
+	local clients = vim.lsp.get_clients { bufnr = bufnr }
+
+	if vim.tbl_isempty(clients) then
+		vim.notify("No LSP client attached to this buffer", vim.log.levels.WARN)
+		return
+	end
+
+	for _, client in pairs(clients) do
+		local name = client.name
+		vim.lsp.stop_client(client.id, true) -- force stop
+		vim.schedule(function()
+			vim.cmd("LspStart " .. name)
+			vim.notify("Restarted LSP: " .. name, vim.log.levels.INFO)
+		end)
+	end
+end, { desc = "Restart LSP for current buffer" })

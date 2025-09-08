@@ -66,7 +66,6 @@ return {
 		event = "BufReadPost", -- or lazy-load however you'd like
 		config = function()
 			require("nvim-treesitter.configs").setup {
-
 				textobjects = {
 					-- Example settings
 					select = {
