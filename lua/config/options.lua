@@ -4,8 +4,7 @@ vim.g.have_nerd_font = true
 
 vim.opt.number = true
 vim.opt.relativenumber = true
-vim.o.wrap = false
-vim.o.linebreak = false
+vim.o.wrap = true
 
 -- Save undo history
 vim.opt.undofile = true
@@ -46,7 +45,8 @@ vim.diagnostic.config { float = { border = border } }
 vim.o.winborder = "rounded"
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 10
+vim.opt.scrolloff = 8
+vim.opt.virtualedit = "onemore"
 
 --  Remove this option if you want your OS clipboard to remain independent.
 vim.schedule(function()
@@ -62,3 +62,18 @@ vim.opt.formatoptions:remove "o"
 vim.diagnostic.config {
 	virtual_text = { severity_sort = true },
 }
+
+-- Tags like @param, @return
+vim.api.nvim_set_hl(0, "@attribute.luadoc", { fg = "#DCA561", bold = true }) -- autumn yellow
+
+-- Parameter names
+vim.api.nvim_set_hl(0, "@field.luadoc", { fg = "#7E9CD8", italic = true }) -- dragon blue
+
+-- Types (Player, boolean, number, etc.)
+vim.api.nvim_set_hl(0, "@type.luadoc", { fg = "#98BB6C", bold = true }) -- spring green
+
+-- Plain text description
+vim.api.nvim_set_hl(0, "@comment.luadoc", { fg = "#DCD7BA" }) -- fuji white
+
+-- Strings inside docs
+vim.api.nvim_set_hl(0, "@string.luadoc", { fg = "#6A9589" }) -- crystal blue

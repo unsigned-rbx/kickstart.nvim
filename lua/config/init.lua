@@ -1,7 +1,7 @@
 require "config.options"
 require "config.keymaps"
 require "config.autocmds"
-require "config.transparency"
+-- require "config.transparency"
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
@@ -37,9 +37,3 @@ require("Lazy").setup("plugins", {
 		},
 	},
 })
-
--- Re-apply when changing colorschemes
--- vim.api.nvim_set_hl(0, "ErrorLensError", { fg = "#FF6363", bg = "#4B252C", bold = true })
--- vim.api.nvim_set_hl(0, "ErrorLensWarn", { fg = "#FA973A", bg = "#403733", bold = true })
--- vim.api.nvim_set_hl(0, "ErrorLensInfo", { fg = "#5B38E8", bg = "#281478", bold = true })
--- vim.api.nvim_set_hl(0, "ErrorLensHint", { fg = "#25E64B", bg = "#147828", bold = true })

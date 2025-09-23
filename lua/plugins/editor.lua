@@ -238,7 +238,11 @@ return {
 					},
 
 					-- Disable performance-killing settings
-					path_display = { "truncate" }, -- NOT "smart" which is slow
+					path_display = function(_, path)
+						local tail = vim.fn.fnamemodify(path, ":t") -- filename
+						local full = vim.fn.fnamemodify(path, ":~:.") -- full/relative path
+						return string.format("%s - %s", tail, full)
+					end,
 					sorting_strategy = "ascending",
 
 					-- Layout optimizations
@@ -295,7 +299,12 @@ return {
 					vertical = { preview_height = 0.45 },
 				},
 				winblend = 8,
-				path_display = { "smart" }, -- or { "filename_first" }
+				path_display = function(_, path)
+					local tail = vim.fn.fnamemodify(path, ":t") -- filename
+					local full = vim.fn.fnamemodify(path, ":~:.") -- full/relative path
+					return string.format("%s - %s", tail, full)
+				end,
+				-- path_display = { "smart" }, -- or { "filename_first" }
 				color_devicons = true,
 				mappings = {
 					i = {
@@ -322,7 +331,7 @@ return {
 						hidden = true,
 						-- Removed no_ignore = true to respect .gitignore files
 						follow = true,
-						path_display = { "smart" },
+						path_display = { filename_first = { reverse_directories = false } },
 					},
 					buffers = themes.get_dropdown {
 						previewer = false,
@@ -344,7 +353,7 @@ return {
 							preview_width = 0.30, -- This controls the preview size
 							-- Remove results_width - it's not a valid key
 						},
-						path_display = { "truncate" },
+						path_display = { filename_first = { reverse_directories = false } },
 						results_title = false,
 						prompt_title = "Live Grep",
 						additional_args = function()
@@ -450,7 +459,9 @@ return {
 			vim.keymap.set("n", "<leader>sg", function()
 				builtin.live_grep {
 					sorting_strategy = "ascending",
-					entry_maker = comment_entry_maker { path_display = { "smart" } },
+					entry_maker = comment_entry_maker {
+						path_display = { filename_first = { reverse_directories = false } },
+					},
 					sorter = demote_comments,
 					additional_args = function()
 						return { "--hidden" }

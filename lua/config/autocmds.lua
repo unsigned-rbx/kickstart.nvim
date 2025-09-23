@@ -37,7 +37,15 @@ autocmd("LspAttach", {
 
 autocmd("VimResized", {
 	callback = function()
-		vim.cmd "wincmd ="
+		vim.cmd "tabdo wincmd ="
 	end,
 	desc = "Auto-balance windows on resize",
+})
+
+autocmd("FileType", {
+	pattern = "NvimTree",
+	callback = function(args)
+		vim.api.nvim_set_option_value("winfixwidth", true, { win = 0 })
+	end,
+	desc = "Keep NvimTree width fixed",
 })

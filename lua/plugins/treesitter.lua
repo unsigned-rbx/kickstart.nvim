@@ -39,6 +39,36 @@ return {
 	},
 
 	{
+		"danymat/neogen",
+		dependencies = "nvim-treesitter/nvim-treesitter",
+		config = function()
+			require("neogen").setup {
+				enabled = true,
+				languages = {
+					luau = {
+						template = {
+							annotation_convention = "ldoc",
+						},
+					},
+				},
+			}
+		end,
+		keys = {
+			{
+				"<Leader>ng",
+				function()
+					require("neogen").generate()
+				end,
+				desc = "Generate docstring",
+			},
+		},
+	},
+	{
+		"nvim-treesitter/playground",
+		cmd = { "TSPlaygroundToggle", "TSHighlightCapturesUnderCursor" },
+	},
+
+	{
 		"nvim-treesitter/nvim-treesitter-context",
 		dependencies = { "nvim-treesitter/nvim-treesitter" },
 		config = function()
@@ -66,6 +96,7 @@ return {
 		event = "BufReadPost", -- or lazy-load however you'd like
 		config = function()
 			require("nvim-treesitter.configs").setup {
+				playground = { enable = true },
 				textobjects = {
 					-- Example settings
 					select = {

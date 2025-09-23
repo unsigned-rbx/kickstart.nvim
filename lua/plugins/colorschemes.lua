@@ -40,6 +40,33 @@ return {
 		opts = {},
 		config = function()
 			vim.cmd.colorscheme "kanagawa-dragon"
+
+			local function hi_luadoc()
+				local yellow = "#DCA561" -- autumn yellow
+				local blue = "#7E9CD8" -- dragon blue
+				local green = "#98BB6C" -- spring green
+				local white = "#DCD7BA" -- fuji white
+
+				-- tags like @param, @return
+				vim.api.nvim_set_hl(0, "@attribute.luadoc", { fg = yellow, bold = true })
+				vim.api.nvim_set_hl(0, "@tag.luadoc", { fg = yellow, bold = true })
+
+				-- parameter names
+				vim.api.nvim_set_hl(0, "@field.luadoc", { fg = blue, italic = true })
+
+				-- type names (if you add them: @param player Player)
+				vim.api.nvim_set_hl(0, "@type.luadoc", { fg = green, bold = true })
+
+				-- descriptions
+				vim.api.nvim_set_hl(0, "@comment.luadoc", { fg = white })
+			end
+
+			vim.api.nvim_create_autocmd("ColorScheme", {
+				pattern = "kanagawa*",
+				callback = hi_luadoc,
+			})
+
+			hi_luadoc()
 		end,
 	},
 }

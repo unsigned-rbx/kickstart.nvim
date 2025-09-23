@@ -7,4 +7,5 @@ return {
 	{ import = "plugins.treesitter" },
 	{ import = "plugins.git" },
 	{ import = "plugins.utilities" },
+	{ import = "plugins.notes" },
 }

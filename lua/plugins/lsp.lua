@@ -56,6 +56,7 @@ return {
 						ignoreGlobs = { "**/_Index/**", "node_modules/**" },
 						completion = {
 							imports = {
+								requireStyle = "alwaysAbsolute",
 								enabled = true,
 								ignoreGlobs = { "**/_Index/**", "node_modules/**" },
 							},
@@ -84,14 +85,6 @@ return {
 				},
 				types = {
 					definition_files = get_project_type_defs(),
-					-- definition_files = {
-					-- 	"./types/Persistence.d.luau",
-					-- 	"./types/Default.d.luau",
-					-- 	"./types/Enums.d.luau",
-					-- 	"./types/Network.d.luau",
-					-- 	"./types/Replica.d.luau",
-					-- 	"./types/Bathroom.d.luau",
-					-- },
 				},
 				platform = {
 					type = rojo_project() and "roblox" or "standard",
@@ -349,17 +342,27 @@ return {
 			}
 		end,
 	},
-
 	{
 		"folke/lazydev.nvim",
 		ft = "lua",
 		opts = {
 			library = {
-				-- Load luvit types when the `vim.uv` word is found
-				{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+				{ path = "neovim", types = true }, -- Neovim API (vim.*, vim.api.*)
+				"lazy.nvim", -- Lazy plugin spec types
+				{ path = "${3rd}/luv/library", words = { "vim%.uv", "vim%.loop" } }, -- uv
 			},
 		},
 	},
+	-- {
+	-- 	"folke/lazydev.nvim",
+	-- 	ft = "lua",
+	-- 	opts = {
+	-- 		library = {
+	-- 			-- Load luvit types when the `vim.uv` word is found
+	-- 			{ path = "${3rd}/luv/library", words = { "vim%.uv" } },
+	-- 		},
+	-- 	},
+	-- },
 
 	{ -- Autoformat
 		"stevearc/conform.nvim",

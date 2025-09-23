@@ -70,6 +70,9 @@ keymap("n", "<leader>x", "", {
 	end,
 })
 
+vim.keymap.set("n", "j", "jzz", { desc = "Down and center" })
+vim.keymap.set("n", "k", "kzz", { desc = "Up and center" })
+
 -- Map Escape to clear search highlight
 keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", { noremap = true, silent = true })
 
