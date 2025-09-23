@@ -26,6 +26,47 @@ end
 dim_gitignored()
 vim.api.nvim_create_autocmd("ColorScheme", { callback = dim_gitignored })
 
+local function filename_first_maker(opts)
+	local make_entry = require "telescope.make_entry"
+	local gen = make_entry.gen_from_file(opts or {})
+	return function(path)
+		local e = gen(path)
+		if not e then
+			return nil
+		end
+		local tail = e.path:match "[^/\\]+$" or e.path
+		e.ordinal = (tail .. " " .. e.path):lower() -- basename has highest weight
+		e.display = tail .. " — " .. e.path -- nice display (optional)
+		return e
+	end
+end
+
+-- filename-biased sorter (bonus if prompt matches the basename)
+local sorters = require "telescope.sorters"
+local base = sorters.get_fzy_sorter() -- fast & good enough
+
+local filename_bias_sorter = sorters.Sorter:new {
+	scoring_function = function(_, prompt, _, entry)
+		local s = base:scoring_function(prompt, entry.ordinal, entry)
+		if not s or s < 0 then
+			return s
+		end
+		local tail = (entry.path or entry.ordinal):match("[^/\\]+$"):lower()
+		local p = (prompt or ""):lower()
+
+		-- strong bonus when basename matches
+		if tail:find("^" .. vim.pesc(p)) then
+			s = s - 1500 -- prefix match
+		elseif tail:find(p, 1, true) then
+			s = s - 900 -- substring match
+		end
+		return s
+	end,
+	highlighter = function(_, prompt, display)
+		return base:highlighter(prompt, display)
+	end,
+}
+
 return {
 	{
 		"nvim-tree/nvim-tree.lua",
@@ -174,36 +215,25 @@ return {
 		},
 		config = function()
 			local ignore_globs = {
-				-- Your existing patterns
 				"**/_Index/**",
 				"node_modules/**",
-
-				-- Git and version control
 				".git/**",
 				".svn/**",
 				".hg/**",
-
-				-- Build/dist directories
 				"dist/**",
 				"build/**",
 				".next/**",
 				".nuxt/**",
-				"target/**", -- Rust
-				"__pycache__/**", -- Python
-				"*.egg-info/**", -- Python
-
-				-- IDE/Editor files
+				"target/**",
+				"__pycache__/**",
+				"*.egg-info/**",
 				".vscode/**",
 				".idea/**",
 				"*.swp",
 				"*.swo",
 				"*~",
-
-				-- OS files
 				".DS_Store",
 				"Thumbs.db",
-
-				-- Logs and temp files
 				"*.log",
 				"tmp/**",
 				"temp/**",
@@ -212,113 +242,86 @@ return {
 			local telescope = require "telescope"
 			local actions = require "telescope.actions"
 			local themes = require "telescope.themes"
+			local builtin = require "telescope.builtin"
+			local make_entry = require "telescope.make_entry"
+			local entry_display = require "telescope.pickers.entry_display"
+			local utils = require "telescope.utils"
+			local sorters = require "telescope.sorters"
 
-			-- Define your icons here or import them from your theme
 			local prompt_icon = "🔍 "
 			local caret_icon = "❯ "
 			local entry_prefix = "  "
 
 			telescope.setup {
 				defaults = {
-					-- CRITICAL: Increase scrolling limit from default 250 to handle large results
 					temp__scrolling_limit = 10000,
 
-					-- Optimize ripgrep arguments for M4 Max
-					vimgrep_arguments = {
-						"rg",
-						"--color=never",
-						"--no-heading",
-						"--with-filename",
-						"--line-number",
-						"--column",
-						"--smart-case",
-						"--threads=12", -- Match M4 Max performance cores
-						"--max-count=1000", -- Prevent infinite result processing
-						"--trim", -- Performance optimization
+					vimgrep_arguments = (function()
+						local v = require("telescope.config").values.vimgrep_arguments
+						local args = vim.deepcopy(v)
+						table.insert(args, "--hidden")
+						for _, g in ipairs(ignore_globs) do
+							table.insert(args, "--glob")
+							table.insert(args, "!" .. g)
+						end
+						return args
+					end)(),
+
+					file_ignore_patterns = {
+						"/_Index/",
+						"/node_modules/",
+						"/.git/",
+						"/dist/",
+						"/build/",
+						"/.next/",
+						"/.nuxt/",
+						"/target/",
+						"/__pycache__/",
+						"/%.egg%-info/",
+						"/%.vscode/",
+						"/%.idea/",
+						"%.swp$",
+						"%.swo$",
+						"%.log$",
+						"/tmp/",
+						"/temp/",
+						"%.DS_Store$",
+						"Thumbs%.db$",
 					},
 
-					-- Disable performance-killing settings
-					path_display = function(_, path)
-						local tail = vim.fn.fnamemodify(path, ":t") -- filename
-						local full = vim.fn.fnamemodify(path, ":~:.") -- full/relative path
-						return string.format("%s - %s", tail, full)
-					end,
+					prompt_prefix = prompt_icon,
+					selection_caret = caret_icon,
+					entry_prefix = entry_prefix,
+					results_title = false,
+					dynamic_preview_title = true,
 					sorting_strategy = "ascending",
-
-					-- Layout optimizations
+					layout_strategy = "flex",
 					layout_config = {
-						preview_cutoff = 120,
-						width = 0.75,
-						height = 0.60,
+						prompt_position = "top",
+						width = 0.95,
+						height = 0.90,
+						horizontal = { preview_width = 0.55 },
+						vertical = { preview_height = 0.45 },
+					},
+					winblend = 8,
+					path_display = { filename_first = { reverse_directories = false } },
+					color_devicons = true,
+
+					mappings = {
+						i = {
+							["<C-j>"] = actions.move_selection_next,
+							["<C-k>"] = actions.move_selection_previous,
+							["<C-u>"] = false,
+							["<C-d>"] = false,
+						},
 					},
 				},
 
-				file_ignore_patterns = {
-					"/_Index/",
-					"/node_modules/",
-					"/.git/",
-					"/dist/",
-					"/build/",
-					"/.next/",
-					"/.nuxt/",
-					"/target/",
-					"/__pycache__/",
-					"/%.egg%-info/",
-					"/%.vscode/",
-					"/%.idea/",
-					"%.swp$",
-					"%.swo$",
-					"%.log$",
-					"/tmp/",
-					"/temp/",
-					"%.DS_Store$",
-					"Thumbs%.db$",
-				},
-				vimgrep_arguments = (function()
-					local v = require("telescope.config").values.vimgrep_arguments
-					local args = vim.deepcopy(v)
-					table.insert(args, "--hidden")
-					for _, g in ipairs(ignore_globs) do
-						table.insert(args, "--glob")
-						table.insert(args, "!" .. g)
-					end
-					return args
-				end)(),
-				prompt_prefix = prompt_icon,
-				selection_caret = caret_icon,
-				entry_prefix = entry_prefix,
-				results_title = false,
-				dynamic_preview_title = true,
-				sorting_strategy = "ascending",
-				layout_strategy = "flex",
-				layout_config = {
-					prompt_position = "top",
-					width = 0.95,
-					height = 0.90,
-					horizontal = { preview_width = 0.55 },
-					vertical = { preview_height = 0.45 },
-				},
-				winblend = 8,
-				path_display = function(_, path)
-					local tail = vim.fn.fnamemodify(path, ":t") -- filename
-					local full = vim.fn.fnamemodify(path, ":~:.") -- full/relative path
-					return string.format("%s - %s", tail, full)
-				end,
-				-- path_display = { "smart" }, -- or { "filename_first" }
-				color_devicons = true,
-				mappings = {
-					i = {
-						["<C-j>"] = actions.move_selection_next,
-						["<C-k>"] = actions.move_selection_previous,
-						["<C-u>"] = false, -- keep insert scrolling intact
-						["<C-d>"] = false,
-					},
-				},
-
-				-- per-picker looks
 				pickers = {
 					find_files = {
 						previewer = true,
+						hidden = true,
+						follow = true,
 						sorting_strategy = "ascending",
 						layout_strategy = "flex",
 						layout_config = {
@@ -328,10 +331,9 @@ return {
 							horizontal = { preview_width = 0.55 },
 							vertical = { preview_height = 0.45 },
 						},
-						hidden = true,
-						-- Removed no_ignore = true to respect .gitignore files
-						follow = true,
 						path_display = { filename_first = { reverse_directories = false } },
+						entry_maker = filename_first_maker(),
+						sorter = filename_bias_sorter,
 					},
 					buffers = themes.get_dropdown {
 						previewer = false,
@@ -350,8 +352,7 @@ return {
 							prompt_position = "top",
 							width = 0.98,
 							height = 0.95,
-							preview_width = 0.30, -- This controls the preview size
-							-- Remove results_width - it's not a valid key
+							preview_width = 0.30,
 						},
 						path_display = { filename_first = { reverse_directories = false } },
 						results_title = false,
@@ -372,21 +373,15 @@ return {
 					fzf = {
 						fuzzy = true,
 						override_generic_sorter = true,
-						override_file_sorter = true,
+						override_file_sorter = true, -- 🔑 ensures filename priority
 						case_mode = "smart_case",
 					},
 					["ui-select"] = themes.get_dropdown(),
 				},
 			}
 
-			pcall(require("telescope").load_extension, "fzf")
-			pcall(require("telescope").load_extension, "ui-select")
-
-			local builtin = require "telescope.builtin"
-			local make_entry = require "telescope.make_entry"
-			local entry_display = require "telescope.pickers.entry_display"
-			local utils = require "telescope.utils"
-			local sorters = require "telescope.sorters"
+			pcall(telescope.load_extension, "fzf")
+			pcall(telescope.load_extension, "ui-select")
 
 			-- highlight for commented results
 			vim.api.nvim_set_hl(0, "TelescopeResultsCommented", { link = "Comment" })
@@ -396,11 +391,7 @@ return {
 				local gen = make_entry.gen_from_vimgrep(opts or {})
 				local displayer = entry_display.create {
 					separator = " ",
-					items = {
-						{ width = 0.45 }, -- filename
-						{ width = 8 }, -- lnum:col
-						{ remaining = true }, -- text
-					},
+					items = { { width = 0.45 }, { width = 8 }, { remaining = true } },
 				}
 
 				return function(line)
@@ -412,20 +403,25 @@ return {
 					local ext = (e.filename:match "%.([%w_]+)$" or ""):lower()
 					local commented = false
 					if ext == "lua" or ext == "luau" then
-						local cmt = e.text:find "%-%-" -- position of `--`
+						local cmt = e.text:find "%-%-"
 						if cmt and (e.col or 1) > cmt then
 							commented = true
 						end
 					end
 					e._commented = commented
 
-					-- custom display with gray filename/text when commented
 					local fname = utils.transform_path(opts, e.filename)
 					e.display = function(entry)
 						return displayer {
-							{ fname, commented and "TelescopeResultsCommented" or "TelescopeResultsFileName" },
+							{
+								fname,
+								commented and "TelescopeResultsCommented" or "TelescopeResultsFileName",
+							},
 							{ string.format("%d:%d", entry.lnum or 0, entry.col or 0), "TelescopeResultsLineNr" },
-							{ entry.text, commented and "TelescopeResultsCommented" or "TelescopeResultsNormal" },
+							{
+								entry.text,
+								commented and "TelescopeResultsCommented" or "TelescopeResultsNormal",
+							},
 						}
 					end
 
@@ -434,23 +430,24 @@ return {
 			end
 
 			-- Sorter that pushes commented hits to the bottom
-			local base = sorters.get_fzy_sorter() -- or get_generic_fuzzy_sorter()
+			local base = sorters.get_fzy_sorter()
 			local demote_comments = sorters.Sorter:new {
-				scoring_function = function(self, prompt, line, entry)
+				scoring_function = function(_, prompt, line, entry)
 					local s = base:scoring_function(prompt, line, entry)
 					if not s or s < 0 then
 						return s
 					end
 					if entry._commented then
-						return s + 1e9 -- huge penalty -> bottom with ascending sort
+						return s + 1e9
 					end
 					return s
 				end,
-				highlighter = function(self, prompt, display)
+				highlighter = function(_, prompt, display)
 					return base:highlighter(prompt, display)
 				end,
 			}
 
+			-- Keymaps
 			vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[S]earch [H]elp" })
 			vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[S]earch [K]eymaps" })
 			vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "[S]earch [F]iles" })
@@ -473,7 +470,6 @@ return {
 			vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = '[S]earch Recent Files ("." for repeat)' })
 			vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "[ ] Find existing buffers" })
 
-			-- Slightly advanced example of overriding default behavior and theme
 			vim.keymap.set("n", "<leader>/", function()
 				builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown {
 					winblend = 10,
@@ -625,5 +621,28 @@ return {
 		keys = {
 			{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "Open lazy git" },
 		},
+		config = function()
+			-- Close LazyGit floating window with <Esc>
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = "lazygit",
+				callback = function()
+					-- terminal mode <Esc>
+					vim.keymap.set("t", "<Esc>", [[<C-\><C-n><cmd>q<CR>]], {
+						buffer = true,
+						noremap = true,
+						silent = true,
+						desc = "Close LazyGit with <Esc>",
+					})
+
+					-- (optional) normal mode <Esc>, in case you hit <C-\><C-n> first
+					vim.keymap.set("n", "<Esc>", "<cmd>close<CR>", {
+						buffer = true,
+						noremap = true,
+						silent = true,
+						desc = "Exit LazyGit with <Esc>",
+					})
+				end,
+			})
+		end,
 	},
 }

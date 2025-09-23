@@ -70,11 +70,21 @@ keymap("n", "<leader>x", "", {
 	end,
 })
 
-vim.keymap.set("n", "j", "jzz", { desc = "Down and center" })
-vim.keymap.set("n", "k", "kzz", { desc = "Up and center" })
+keymap("n", "j", "jzz", { desc = "Down and center" })
+keymap("n", "k", "kzz", { desc = "Up and center" })
+
+-- Paste on new line below with 'p'
+keymap("n", "p", [[:<C-u>put =getreg(v:register)<CR>]], opts) -- below
+keymap("n", "P", [[:<C-u>put! =getreg(v:register)<CR>]], opts) -- above
+
+-- In visual mode: paste without yanking replaced text
+keymap("x", "p", [["_dP]], opts)
 
 -- Map Escape to clear search highlight
 keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", { noremap = true, silent = true })
+
+-- disable annoying recording
+keymap("n", "q", "<Nop>")
 
 keymap("n", "<leader>dw", function()
 	-- Save cursor position

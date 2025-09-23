@@ -8,4 +8,5 @@ return {
 	{ import = "plugins.git" },
 	{ import = "plugins.utilities" },
 	{ import = "plugins.notes" },
+	{ import = "plugins.navigation" },
 }

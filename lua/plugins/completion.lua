@@ -198,12 +198,34 @@ return {
 				sorting = {
 					priority_weight = 2,
 					comparators = {
+						-- dynamic "kind bias"
+						function(e1, e2)
+							local score1, score2 = e1.score or 0, e2.score or 0
+
+							-- Only apply bias if scores are equal (or very close)
+							if math.abs(score1 - score2) < 2 then
+								local priority = {
+									[cmp.lsp.CompletionItemKind.Variable] = 1,
+									[cmp.lsp.CompletionItemKind.Class] = 2,
+									[cmp.lsp.CompletionItemKind.Struct] = 3,
+									[cmp.lsp.CompletionItemKind.Module] = 4,
+								}
+								local k1 = priority[e1:get_kind()] or 99
+								local k2 = priority[e2:get_kind()] or 99
+								if k1 ~= k2 then
+									return k1 < k2
+								end
+							end
+						end,
+
+						-- keep normal cmp comparators
 						cmp.config.compare.offset,
 						cmp.config.compare.exact,
 						cmp.config.compare.score,
 						cmp.config.compare.recently_used,
 						cmp.config.compare.locality,
 						cmp.config.compare.kind,
+						cmp.config.compare.sort_text,
 						cmp.config.compare.length,
 						cmp.config.compare.order,
 					},
