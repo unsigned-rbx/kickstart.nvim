@@ -198,6 +198,10 @@ return {
 				sorting = {
 					priority_weight = 2,
 					comparators = {
+						cmp.config.compare.offset,
+						cmp.config.compare.exact,
+						cmp.config.compare.score,
+
 						-- dynamic "kind bias"
 						function(e1, e2)
 							local score1, score2 = e1.score or 0, e2.score or 0
@@ -218,10 +222,6 @@ return {
 							end
 						end,
 
-						-- keep normal cmp comparators
-						cmp.config.compare.offset,
-						cmp.config.compare.exact,
-						cmp.config.compare.score,
 						cmp.config.compare.recently_used,
 						cmp.config.compare.locality,
 						cmp.config.compare.kind,

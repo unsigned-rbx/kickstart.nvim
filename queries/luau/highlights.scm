@@ -130,7 +130,8 @@
 ] @operator
 
 ; Variables
-(identifier) @variable
+((identifier) @variable
+  (#lua-match? @variable "^[A-Z]"))
 
 ; Types
 (type/identifier) @type

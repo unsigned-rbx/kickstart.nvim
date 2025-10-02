@@ -32,7 +32,7 @@ return {
 							end,
 						},
 						sorter = conf.generic_sorter {},
-						attach_mappings = function(prompt_bufnr, map)
+						attach_mappings = function(prompt_bufnr, _)
 							actions.select_default:replace(function()
 								actions.close(prompt_bufnr)
 								local selection = action_state.get_selected_entry()
@@ -55,11 +55,11 @@ return {
 			end, { desc = "Harpoon add file" })
 
 			-- toggle quick menu
-			keymap("n", "<leader>h", function()
-				harpoon.ui:toggle_quick_menu(harpoon:list())
-			end, { desc = "Harpoon menu" })
+			-- keymap("n", "<leader>h", function()
+			-- 	harpoon.ui:toggle_quick_menu(harpoon:list())
+			-- end, { desc = "Harpoon menu" })
 
-			vim.keymap.set("n", "<leader>hc", function()
+			vim.keymap.set("n", "<leader>ch", function()
 				harpoon:list():clear()
 			end, { desc = "Clear Harpoon list" })
 
@@ -77,7 +77,7 @@ return {
 				harpoon:list():select(4)
 			end)
 
-			vim.keymap.set("n", "<leader>fh", function()
+			vim.keymap.set("n", "<leader>h", function()
 				toggle_telescope(harpoon:list())
 			end, { desc = "[F]ind [H]arpoon file" })
 		end,

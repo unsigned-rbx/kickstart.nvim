@@ -79,9 +79,26 @@ return {
 			require("nvim-tree").setup {
 				view = {
 					side = "left", -- docked on the left
-					width = 35, -- pick a width you like
+					width = 45, -- pick a width you like
 					signcolumn = "yes",
-					-- remove the `float = { ... }` block
+					float = {
+						enable = true,
+						open_win_config = function()
+							local screen_w = vim.opt.columns:get()
+							local screen_h = vim.opt.lines:get() - vim.o.cmdheight
+							local window_w = 60
+							local window_h = 40
+
+							return {
+								relative = "editor",
+								border = "rounded",
+								width = window_w,
+								height = window_h,
+								row = math.floor((screen_h - window_h) / 2),
+								col = math.floor((screen_w - window_w) / 2),
+							}
+						end,
+					},
 				},
 
 				renderer = {
@@ -139,7 +156,7 @@ return {
 				},
 
 				actions = {
-					open_file = { quit_on_open = false, resize_window = true }, -- auto-close tree when opening a file
+					open_file = { quit_on_open = true, resize_window = false }, -- auto-close tree when opening a file
 				},
 
 				on_attach = function(bufnr)
@@ -621,28 +638,5 @@ return {
 		keys = {
 			{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "Open lazy git" },
 		},
-		config = function()
-			-- Close LazyGit floating window with <Esc>
-			vim.api.nvim_create_autocmd("FileType", {
-				pattern = "lazygit",
-				callback = function()
-					-- terminal mode <Esc>
-					vim.keymap.set("t", "<Esc>", [[<C-\><C-n><cmd>q<CR>]], {
-						buffer = true,
-						noremap = true,
-						silent = true,
-						desc = "Close LazyGit with <Esc>",
-					})
-
-					-- (optional) normal mode <Esc>, in case you hit <C-\><C-n> first
-					vim.keymap.set("n", "<Esc>", "<cmd>close<CR>", {
-						buffer = true,
-						noremap = true,
-						silent = true,
-						desc = "Exit LazyGit with <Esc>",
-					})
-				end,
-			})
-		end,
 	},
 }

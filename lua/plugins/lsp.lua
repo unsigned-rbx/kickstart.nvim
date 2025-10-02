@@ -53,12 +53,20 @@ return {
 			vim.lsp.config("luau-lsp", {
 				settings = {
 					["luau-lsp"] = {
-						ignoreGlobs = { "**/_Index/**", "node_modules/**" },
 						completion = {
+							ignoreGlobs = {
+								"**/_Index/**",
+								"node_modules/**",
+								"**/.pesde/**", -- Add this line
+							},
 							imports = {
 								requireStyle = "alwaysAbsolute",
 								enabled = true,
-								ignoreGlobs = { "**/_Index/**", "node_modules/**" },
+								ignoreGlobs = {
+									"**/_Index/**",
+									"node_modules/**",
+									"**/.pesde/**", -- Add this line
+								},
 							},
 						},
 					},
@@ -81,6 +89,7 @@ return {
 					enable_new_solver = false, -- enables the flags required for luau's new type solver.
 					sync = true, -- sync currently enabled fflags with roblox's published fflags
 					override = { -- override fflags passed to luau
+						LuauTableTypeMaximumStringifierLength = "100",
 					},
 				},
 				types = {

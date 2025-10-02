@@ -24,8 +24,8 @@ vim.opt.inccommand = "split"
 
 vim.opt.cursorline = true
 
-vim.opt.tabstop = 2 -- Number of spaces a <Tab> in the file counts for
-vim.opt.shiftwidth = 2 -- Number of spaces to use for autoindenting
+vim.opt.tabstop = 4 -- Number of spaces a <Tab> in the file counts for
+vim.opt.shiftwidth = 4 -- Number of spaces to use for autoindenting
 vim.opt.expandtab = false -- Use spaces instead of tabs
 
 vim.opt.termguicolors = true
