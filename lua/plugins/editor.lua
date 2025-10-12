@@ -28,19 +28,29 @@ vim.api.nvim_create_autocmd("ColorScheme", { callback = dim_gitignored })
 
 local function filename_first_maker(opts)
 	local make_entry = require "telescope.make_entry"
+	local Path = require "plenary.path"
 	local gen = make_entry.gen_from_file(opts or {})
+
 	return function(path)
 		local e = gen(path)
 		if not e then
 			return nil
 		end
+
 		local tail = e.path:match "[^/\\]+$" or e.path
+
+		-- Get relative path from cwd
+		local cwd = vim.loop.cwd()
+		local relative_path = e.path
+		if cwd and e.path:sub(1, #cwd) == cwd then
+			relative_path = e.path:sub(#cwd + 2) -- +2 to skip the trailing slash
+		end
+
 		e.ordinal = (tail .. " " .. e.path):lower() -- basename has highest weight
-		e.display = tail .. " — " .. e.path -- nice display (optional)
+		e.display = tail .. " — " .. relative_path -- show relative path
 		return e
 	end
 end
-
 -- filename-biased sorter (bonus if prompt matches the basename)
 local sorters = require "telescope.sorters"
 local base = sorters.get_fzy_sorter() -- fast & good enough
@@ -638,5 +648,21 @@ return {
 		keys = {
 			{ "<leader>lg", "<cmd>LazyGit<cr>", desc = "Open lazy git" },
 		},
+	},
+	{
+		"greggh/claude-code.nvim",
+		dependencies = {
+			"nvim-lua/plenary.nvim", -- Required for git operations
+		},
+		config = function()
+			require("claude-code").setup {
+				window = {
+					split_ratio = 0.3,
+					position = "vertical",
+				},
+			}
+
+			vim.keymap.set("n", "<leader>cc", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code" })
+		end,
 	},
 }

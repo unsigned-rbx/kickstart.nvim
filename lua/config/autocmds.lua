@@ -50,14 +50,14 @@ autocmd("FileType", {
 	desc = "Keep NvimTree width fixed",
 })
 
-autocmd("TextYankPost", {
-	pattern = "*",
-	callback = function()
-		vim.lsp.buf.format { async = true }
-		-- This is a placeholder. You'll need to adapt it to your formatting setup.
-		-- For example, if using LSP formatting:
-		-- vim.lsp.buf.format({ async = true })
-		-- Or, if using formatprg:
-		-- vim.cmd("normal! gqap")
-	end,
-})
+-- autocmd("TextYankPost", {
+-- 	pattern = "*",
+-- 	callback = function()
+-- 		vim.lsp.buf.format { async = true }
+-- 		-- This is a placeholder. You'll need to adapt it to your formatting setup.
+-- 		-- For example, if using LSP formatting:
+-- 		-- vim.lsp.buf.format({ async = true })
+-- 		-- Or, if using formatprg:
+-- 		-- vim.cmd("normal! gqap")
+-- 	end,
+-- })

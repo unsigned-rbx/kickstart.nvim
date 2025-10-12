@@ -114,42 +114,42 @@ return {
 			--  Check out: https://github.com/echasnovski/mini.nvim
 		end,
 	},
-	{
-		"eero-lehtinen/oklch-color-picker.nvim",
-		event = "VeryLazy",
-		version = "*",
-		config = function()
-			require("oklch-color-picker").setup()
-
-			vim.keymap.set("n", "<leader>v", function()
-				require("oklch-color-picker").pick_under_cursor {
-					fallback_open = {},
-				}
-			end, { noremap = true, silent = true })
-
-			vim.keymap.set("n", "<leader>c", function()
-				require("oklch-color-picker").open_picker()
-			end, { noremap = true, silent = true })
-		end,
-		keys = {
-			-- One handed keymap recommended, you will be using the mouse
-			-- {
-			--   "<leader>v",
-			--   function()
-			--     require("oklch-color-picker").pick_under_cursor()
-			--   end,
-			--   desc = "Color pick under cursor",
-			-- },
-			-- {
-			--   "<leader>c",
-			--   function()
-			--     require("oklch-color-picker").open_picker()
-			--   end,
-			--   desc = "Color pick under cursor",
-		},
-		---@type oklch.Opts
-		opts = {
-			silent = true,
-		},
-	},
+	-- {
+	-- 	"eero-lehtinen/oklch-color-picker.nvim",
+	-- 	event = "VeryLazy",
+	-- 	version = "*",
+	-- 	config = function()
+	-- 		require("oklch-color-picker").setup()
+	--
+	-- 		vim.keymap.set("n", "<leader>v", function()
+	-- 			require("oklch-color-picker").pick_under_cursor {
+	-- 				fallback_open = {},
+	-- 			}
+	-- 		end, { noremap = true, silent = true })
+	--
+	-- 		vim.keymap.set("n", "<leader>c", function()
+	-- 			require("oklch-color-picker").open_picker()
+	-- 		end, { noremap = true, silent = true })
+	-- 	end,
+	-- 	keys = {
+	-- 		-- One handed keymap recommended, you will be using the mouse
+	-- 		-- {
+	-- 		--   "<leader>v",
+	-- 		--   function()
+	-- 		--     require("oklch-color-picker").pick_under_cursor()
+	-- 		--   end,
+	-- 		--   desc = "Color pick under cursor",
+	-- 		-- },
+	-- 		-- {
+	-- 		--   "<leader>c",
+	-- 		--   function()
+	-- 		--     require("oklch-color-picker").open_picker()
+	-- 		--   end,
+	-- 		--   desc = "Color pick under cursor",
+	-- 	},
+	-- 	---@type oklch.Opts
+	-- 	opts = {
+	-- 		silent = true,
+	-- 	},
+	-- },
 }

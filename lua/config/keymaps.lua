@@ -55,8 +55,11 @@ vim.api.nvim_set_keymap("v", ">", ">gv", { noremap = true, silent = true })
 vim.keymap.set({ "n", "v" }, "d", '"+d', { noremap = true })
 vim.keymap.set("n", "dd", '"+dd', { noremap = true })
 
-keymap("v", "<S-j>", ":m '>+1<CR>gv=gv", opts)
-keymap("v", "<S-k>", ":m '<-2<CR>gv=gv", opts)
+-- keymap("v", "<S-j>", ":m '>+1<CR>gv=gv", opts)
+-- keymap("v", "<S-k>", ":m '<-2<CR>gv=gv", opts)
+
+keymap("v", "<S-j>", ":m '>+1<CR>gv", opts)
+keymap("v", "<S-k>", ":m '<-2<CR>gv", opts)
 
 -- Telescope diagnostics (shows all diagnostics across workspace)
 keymap("n", "<leader>sd", ":Telescope diagnostics<CR>", { desc = "Search all diagnostics" })
