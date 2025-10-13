@@ -1,4 +1,3 @@
-
 ; Preproc
 (hash_bang_line) @keyword.directive
 
@@ -130,8 +129,7 @@
 ] @operator
 
 ; Variables
-((identifier) @variable
-  (#lua-match? @variable "^[A-Z]"))
+(identifier) @variable
 
 ; Types
 (type/identifier) @type

@@ -45,7 +45,7 @@ vim.diagnostic.config { float = { border = border } }
 vim.o.winborder = "rounded"
 
 -- Minimal number of screen lines to keep above and below the cursor.
-vim.opt.scrolloff = 8
+vim.opt.scrolloff = 999
 vim.opt.virtualedit = "onemore"
 
 --  Remove this option if you want your OS clipboard to remain independent.

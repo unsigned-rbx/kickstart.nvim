@@ -6,6 +6,8 @@ local apiPath = "https://raw.githubusercontent.com/MaximumADHD/Roblox-Client-Tra
 local source = {}
 
 local classes = {}
+local classes_loaded = false
+local loading_in_progress = false
 
 local function getMappedApi()
 	local res = curl.get(apiPath, {
@@ -70,19 +72,40 @@ local function getMembersFromSuperclass(superclassName)
 	return members
 end
 
+local function load_classes_async()
+	if classes_loaded or loading_in_progress then
+		return
+	end
+
+	loading_in_progress = true
+
+	-- Run in background using vim.schedule to not block
+	vim.schedule(function()
+		local mappedApi = getMappedApi()
+		if mappedApi then
+			populateClasses(mappedApi)
+			for _, data in pairs(classes) do
+				if data.Superclass then
+					local temp_members = getMembersFromSuperclass(data.Superclass)
+					for key, value in pairs(temp_members) do
+						data.Members[key] = value
+					end
+				end
+			end
+			classes_loaded = true
+			print "Fusion API data loaded"
+		else
+			print "Failed to load Fusion API data"
+		end
+		loading_in_progress = false
+	end)
+end
+
 function source:new()
 	local o = setmetatable({}, { __index = self })
 
-	o.mappedApi = getMappedApi()
-	populateClasses(o.mappedApi)
-	for _, data in pairs(classes) do
-		if data.Superclass then
-			local temp_members = getMembersFromSuperclass(data.Superclass)
-			for key, value in pairs(temp_members) do
-				data.Members[key] = value
-			end
-		end
-	end
+	-- Start loading in background, but don't wait for it
+	load_classes_async()
 
 	return o
 end
@@ -198,6 +221,13 @@ local mappedAutocomplete = {
 }
 
 function source:complete(request, callback)
+	-- If classes aren't loaded yet, trigger loading and return empty results
+	if not classes_loaded then
+		load_classes_async()
+		callback {}
+		return
+	end
+
 	if has_scope_new_before_cursor() then
 		local items = {}
 		for key, data in pairs(classes) do

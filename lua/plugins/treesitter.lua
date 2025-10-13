@@ -125,6 +125,14 @@ return {
 					enable = true,
 				},
 			}
+			-- Suppress errors from endwise at end of buffer
+			local notify = vim.notify
+			vim.notify = function(msg, level, opts)
+				if type(msg) == "string" and msg:match "nvim%-treesitter%-endwise" and msg:match "Invalid position" then
+					return
+				end
+				notify(msg, level, opts)
+			end
 		end,
 	},
 }

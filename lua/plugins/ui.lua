@@ -5,6 +5,51 @@ return {
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 	},
 
+	{
+		"akinsho/bufferline.nvim",
+		version = "*",
+		dependencies = "nvim-tree/nvim-web-devicons",
+		config = function()
+			require("bufferline").setup {
+				options = {
+					mode = "buffers", -- set to "tabs" to only show tabpages instead
+					numbers = "none", -- can be "none" | "ordinal" | "buffer_id" | "both"
+					close_command = "bdelete! %d",
+					right_mouse_command = "bdelete! %d",
+					left_mouse_command = "buffer %d",
+					middle_mouse_command = nil,
+					indicator = {
+						style = "icon",
+						icon = "▎",
+					},
+					buffer_close_icon = "󰅖",
+					modified_icon = "●",
+					close_icon = "",
+					left_trunc_marker = "",
+					right_trunc_marker = "",
+					diagnostics = "nvim_lsp",
+					diagnostics_indicator = function(count, level)
+						local icon = level:match("error") and " " or " "
+						return " " .. icon .. count
+					end,
+					offsets = {
+						{
+							filetype = "NvimTree",
+							text = "File Explorer",
+							text_align = "center",
+							separator = true,
+						},
+					},
+					separator_style = "thin", -- can be "slant" | "slope" | "thick" | "thin"
+					show_buffer_close_icons = true,
+					show_close_icon = true,
+					show_tab_indicators = true,
+					always_show_bufferline = true,
+				},
+			}
+		end,
+	},
+
 	{ -- Useful plugin to show you pending keybinds.
 		"folke/which-key.nvim",
 		event = "VimEnter", -- Sets the loading event to 'VimEnter'
@@ -108,6 +153,13 @@ return {
 			---@diagnostic disable-next-line: duplicate-set-field
 			statusline.section_location = function()
 				return "%2l:%-2v"
+			end
+
+			-- Override filename section to show path relative to project root
+			---@diagnostic disable-next-line: duplicate-set-field
+			statusline.section_filename = function()
+				-- Get relative path from current working directory (project root)
+				return vim.fn.expand('%:.')
 			end
 
 			-- ... and there is more!
