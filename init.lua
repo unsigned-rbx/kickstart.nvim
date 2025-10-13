@@ -1,6 +1,5 @@
 require "core.autocommands"
 require "config"
-
 --[[
  Custom stuff
 ]]

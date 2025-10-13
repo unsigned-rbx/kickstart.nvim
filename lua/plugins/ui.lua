@@ -13,6 +13,14 @@ return {
 			require("bufferline").setup {
 				options = {
 					mode = "buffers", -- set to "tabs" to only show tabpages instead
+					custom_filter = function(buf_number)
+						local buf_name = vim.fn.bufname(buf_number)
+						-- Exclude buffers with "claude" in the name
+						if buf_name:match("claude") then
+							return false
+						end
+						return true
+					end,
 					numbers = "none", -- can be "none" | "ordinal" | "buffer_id" | "both"
 					close_command = "bdelete! %d",
 					right_mouse_command = "bdelete! %d",
@@ -29,9 +37,10 @@ return {
 					right_trunc_marker = "",
 					diagnostics = "nvim_lsp",
 					diagnostics_indicator = function(count, level)
-						local icon = level:match("error") and " " or " "
+						local icon = level:match "error" and " " or " "
 						return " " .. icon .. count
 					end,
+					duplicates_across_groups = true, -- Show parent dir for duplicate filenames
 					offsets = {
 						{
 							filetype = "NvimTree",
@@ -40,7 +49,7 @@ return {
 							separator = true,
 						},
 					},
-					separator_style = "thin", -- can be "slant" | "slope" | "thick" | "thin"
+					separator_style = "thick", -- can be "slant" | "slope" | "thick" | "thin"
 					show_buffer_close_icons = true,
 					show_close_icon = true,
 					show_tab_indicators = true,
@@ -159,7 +168,7 @@ return {
 			---@diagnostic disable-next-line: duplicate-set-field
 			statusline.section_filename = function()
 				-- Get relative path from current working directory (project root)
-				return vim.fn.expand('%:.')
+				return vim.fn.expand "%:."
 			end
 
 			-- ... and there is more!
@@ -170,8 +179,7 @@ return {
 	-- 	"eero-lehtinen/oklch-color-picker.nvim",
 	-- 	event = "VeryLazy",
 	-- 	version = "*",
-	-- 	config = function()
-	-- 		require("oklch-color-picker").setup()
+	-- 	config = function() require("oklch-color-picker").setup()
 	--
 	-- 		vim.keymap.set("n", "<leader>v", function()
 	-- 			require("oklch-color-picker").pick_under_cursor {

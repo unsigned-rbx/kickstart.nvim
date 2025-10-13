@@ -64,8 +64,32 @@ keymap("x", "p", [["_dP]], opts)
 -- Map Escape to clear search highlight
 keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", { noremap = true, silent = true })
 
--- disable annoying recording
-keymap("n", "q", "<Nop>")
+-- Smart buffer close function
+local function smart_close_buffer()
+	local bufs = vim.fn.getbufinfo({ buflisted = 1 })
+	-- Count buffers, excluding the current one
+	local count = 0
+	for _, buf in ipairs(bufs) do
+		if buf.bufnr ~= vim.api.nvim_get_current_buf() then
+			count = count + 1
+		end
+	end
+
+	if count == 0 then
+		-- No other buffers, prompt to quit
+		local choice = vim.fn.confirm("Close Neovim?", "&Yes\n&No", 2)
+		if choice == 1 then
+			vim.cmd("quit")
+		end
+	else
+		-- Close current buffer
+		vim.cmd("bdelete")
+	end
+end
+
+-- Close buffer with cmd+w and q
+keymap("n", "<D-w>", smart_close_buffer, { noremap = true, silent = true, desc = "Close buffer" })
+keymap("n", "q", smart_close_buffer, { noremap = true, silent = true, desc = "Close buffer" })
 
 keymap("n", "<leader>dw", function()
 	-- Save cursor position
