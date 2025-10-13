@@ -35,13 +35,6 @@ autocmd("LspAttach", {
 	end,
 })
 
-autocmd("VimResized", {
-	callback = function()
-		vim.cmd "tabdo wincmd ="
-	end,
-	desc = "Auto-balance windows on resize",
-})
-
 autocmd("FileType", {
 	pattern = "NvimTree",
 	callback = function(args)

@@ -657,12 +657,34 @@ return {
 		config = function()
 			require("claude-code").setup {
 				window = {
-					split_ratio = 0.3,
-					position = "vertical",
+					position = "float",
+					width = 0.8,
+					height = 0.8,
+					border = "rounded",
 				},
 			}
 
 			vim.keymap.set("n", "<leader>cc", "<cmd>ClaudeCode<CR>", { desc = "Toggle Claude Code" })
+
+			-- Add autocmd to set keymaps for claude-code terminal buffers
+			vim.api.nvim_create_autocmd("FileType", {
+				pattern = "claude-code",
+				callback = function(args)
+					-- Override 'q' to close the window in normal mode
+					vim.keymap.set("n", "q", "<cmd>ClaudeCode<CR>", { buffer = args.buf, noremap = true, silent = true })
+				end,
+			})
+
+			-- Also catch by buffer name pattern since filetype might not be set
+			vim.api.nvim_create_autocmd("TermOpen", {
+				callback = function(args)
+					local bufname = vim.api.nvim_buf_get_name(args.buf)
+					if bufname:match("claude") then
+						-- Override 'q' to close the window in normal mode
+						vim.keymap.set("n", "q", "<cmd>ClaudeCode<CR>", { buffer = args.buf, noremap = true, silent = true })
+					end
+				end,
+			})
 		end,
 	},
 }
