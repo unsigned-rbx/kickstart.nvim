@@ -2,16 +2,42 @@ local telescope = require "telescope"
 local actions = require "telescope.actions"
 local themes = require "telescope.themes"
 
--- subtle popup transparency
-vim.o.pumblend = 12
+-- Rider-themed Telescope highlights
+local function setup_telescope_rider_colors()
+	-- Main telescope windows
+	vim.api.nvim_set_hl(0, "TelescopeNormal", { bg = "#2B2B2B", fg = "#BCBEC4" })
+	vim.api.nvim_set_hl(0, "TelescopeBorder", { bg = "#2B2B2B", fg = "#555555" })
 
--- nicer highlights (works with most colorschemes)
-vim.api.nvim_set_hl(0, "TelescopeBorder", { link = "FloatBorder" })
-vim.api.nvim_set_hl(0, "TelescopePromptBorder", { link = "FloatBorder" })
-vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { link = "FloatBorder" })
-vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { link = "FloatBorder" })
-vim.api.nvim_set_hl(0, "TelescopeNormal", { link = "NormalFloat" })
-vim.api.nvim_set_hl(0, "TelescopeSelection", { link = "PmenuSel" })
+	-- Prompt section (search input)
+	vim.api.nvim_set_hl(0, "TelescopePromptNormal", { bg = "#1E1E1E", fg = "#BCBEC4" })
+	vim.api.nvim_set_hl(0, "TelescopePromptBorder", { bg = "#1E1E1E", fg = "#3592C4" })
+	vim.api.nvim_set_hl(0, "TelescopePromptTitle", { bg = "#3592C4", fg = "#1E1E1E", bold = true })
+	vim.api.nvim_set_hl(0, "TelescopePromptPrefix", { bg = "#1E1E1E", fg = "#3592C4" })
+
+	-- Results section
+	vim.api.nvim_set_hl(0, "TelescopeResultsNormal", { bg = "#2B2B2B", fg = "#BCBEC4" })
+	vim.api.nvim_set_hl(0, "TelescopeResultsBorder", { bg = "#2B2B2B", fg = "#555555" })
+	vim.api.nvim_set_hl(0, "TelescopeResultsTitle", { bg = "#555555", fg = "#BCBEC4", bold = true })
+
+	-- Preview section
+	vim.api.nvim_set_hl(0, "TelescopePreviewNormal", { bg = "#2B2B2B", fg = "#BCBEC4" })
+	vim.api.nvim_set_hl(0, "TelescopePreviewBorder", { bg = "#2B2B2B", fg = "#555555" })
+	vim.api.nvim_set_hl(0, "TelescopePreviewTitle", { bg = "#555555", fg = "#BCBEC4", bold = true })
+
+	-- Selection highlight (like Rider's selection blue)
+	vim.api.nvim_set_hl(0, "TelescopeSelection", { bg = "#214283", fg = "#FFFFFF", bold = true })
+	vim.api.nvim_set_hl(0, "TelescopeSelectionCaret", { bg = "#214283", fg = "#3592C4", bold = true })
+
+	-- Matching characters
+	vim.api.nvim_set_hl(0, "TelescopeMatching", { fg = "#FFC66D", bold = true })
+end
+
+-- Apply colors on startup and when colorscheme changes
+-- setup_telescope_rider_colors()
+-- vim.api.nvim_create_autocmd("ColorScheme", {
+-- 	pattern = "rider",
+-- 	callback = setup_telescope_rider_colors,
+-- })
 
 local nerd = vim.g.have_nerd_font
 local prompt_icon = nerd and "   " or "> "
@@ -28,8 +54,16 @@ vim.api.nvim_create_autocmd("ColorScheme", { callback = dim_gitignored })
 
 local function filename_first_maker(opts)
 	local make_entry = require "telescope.make_entry"
+	local entry_display = require "telescope.pickers.entry_display"
 	local Path = require "plenary.path"
 	local gen = make_entry.gen_from_file(opts or {})
+
+	local displayer = entry_display.create {
+		separator = " ",
+		items = {
+			{ remaining = true },
+		},
+	}
 
 	return function(path)
 		local e = gen(path)
@@ -46,8 +80,22 @@ local function filename_first_maker(opts)
 			relative_path = e.path:sub(#cwd + 2) -- +2 to skip the trailing slash
 		end
 
+		-- Get directory path without filename
+		local dir_path = relative_path:match "(.*/)" or ""
+
 		e.ordinal = (tail .. " " .. e.path):lower() -- basename has highest weight
-		e.display = tail .. " — " .. relative_path -- show relative path
+
+		-- Color-coded display: filename in accent color, separator dimmed, path in comment color
+		e.display = function(entry)
+			local display_text = tail .. " — " .. dir_path
+			return display_text,
+				{
+					{ { 0, #tail }, "TelescopeResultsFileName" },
+					{ { #tail, #tail + 3 }, "TelescopeResultsComment" },
+					{ { #tail + 3, #display_text }, "TelescopeResultsDirectory" },
+				}
+		end
+
 		return e
 	end
 end
@@ -679,7 +727,7 @@ return {
 			vim.api.nvim_create_autocmd("TermOpen", {
 				callback = function(args)
 					local bufname = vim.api.nvim_buf_get_name(args.buf)
-					if bufname:match("claude") then
+					if bufname:match "claude" then
 						-- Override 'q' to close the window in normal mode
 						vim.keymap.set("n", "q", "<cmd>ClaudeCode<CR>", { buffer = args.buf, noremap = true, silent = true })
 					end

@@ -5,59 +5,60 @@ return {
 		dependencies = { "nvim-tree/nvim-web-devicons" },
 	},
 
-	{
-		"akinsho/bufferline.nvim",
-		version = "*",
-		dependencies = "nvim-tree/nvim-web-devicons",
-		config = function()
-			require("bufferline").setup {
-				options = {
-					mode = "buffers", -- set to "tabs" to only show tabpages instead
-					custom_filter = function(buf_number)
-						local buf_name = vim.fn.bufname(buf_number)
-						-- Exclude buffers with "claude" in the name
-						if buf_name:match("claude") then
-							return false
-						end
-						return true
-					end,
-					numbers = "none", -- can be "none" | "ordinal" | "buffer_id" | "both"
-					close_command = "bdelete! %d",
-					right_mouse_command = "bdelete! %d",
-					left_mouse_command = "buffer %d",
-					middle_mouse_command = nil,
-					indicator = {
-						style = "icon",
-						icon = "▎",
-					},
-					buffer_close_icon = "󰅖",
-					modified_icon = "●",
-					close_icon = "",
-					left_trunc_marker = "",
-					right_trunc_marker = "",
-					diagnostics = "nvim_lsp",
-					diagnostics_indicator = function(count, level)
-						local icon = level:match "error" and " " or " "
-						return " " .. icon .. count
-					end,
-					duplicates_across_groups = true, -- Show parent dir for duplicate filenames
-					offsets = {
-						{
-							filetype = "NvimTree",
-							text = "File Explorer",
-							text_align = "center",
-							separator = true,
-						},
-					},
-					separator_style = "thick", -- can be "slant" | "slope" | "thick" | "thin"
-					show_buffer_close_icons = true,
-					show_close_icon = true,
-					show_tab_indicators = true,
-					always_show_bufferline = true,
-				},
-			}
-		end,
-	},
+	-- {
+	-- 	"akinsho/bufferline.nvim",
+	-- 	version = "*",
+	-- 	dependencies = "nvim-tree/nvim-web-devicons",
+	-- 	config = function()
+	-- 		require("bufferline").setup {
+	-- 			options = {
+	-- 				mode = "buffers", -- set to "tabs" to only show tabpages instead
+	-- 				max_name_length = 30, -- Increase from default 18
+	-- 				custom_filter = function(buf_number)
+	-- 					local buf_name = vim.fn.bufname(buf_number)
+	-- 					-- Exclude buffers with "claude" in the name
+	-- 					if buf_name:match("claude") then
+	-- 						return false
+	-- 					end
+	-- 					return true
+	-- 				end,
+	-- 				numbers = "none", -- can be "none" | "ordinal" | "buffer_id" | "both"
+	-- 				close_command = "bdelete! %d",
+	-- 				right_mouse_command = "bdelete! %d",
+	-- 				left_mouse_command = "buffer %d",
+	-- 				middle_mouse_command = nil,
+	-- 				indicator = {
+	-- 					style = "icon",
+	-- 					icon = "▎",
+	-- 				},
+	-- 				buffer_close_icon = "󰅖",
+	-- 				modified_icon = "●",
+	-- 				close_icon = "",
+	-- 				left_trunc_marker = "",
+	-- 				right_trunc_marker = "",
+	-- 				diagnostics = "nvim_lsp",
+	-- 				diagnostics_indicator = function(count, level)
+	-- 					local icon = level:match "error" and " " or " "
+	-- 					return " " .. icon .. count
+	-- 				end,
+	-- 				duplicates_across_groups = true, -- Show parent dir for duplicate filenames
+	-- 				offsets = {
+	-- 					{
+	-- 						filetype = "NvimTree",
+	-- 						text = "File Explorer",
+	-- 						text_align = "center",
+	-- 						separator = true,
+	-- 					},
+	-- 				},
+	-- 				separator_style = "thick", -- can be "slant" | "slope" | "thick" | "thin"
+	-- 				show_buffer_close_icons = true,
+	-- 				show_close_icon = true,
+	-- 				show_tab_indicators = true,
+	-- 				always_show_bufferline = true,
+	-- 			},
+	-- 		}
+	-- 	end,
+	-- },
 
 	{ -- Useful plugin to show you pending keybinds.
 		"folke/which-key.nvim",

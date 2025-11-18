@@ -4,7 +4,7 @@ vim.g.have_nerd_font = true
 
 vim.opt.number = true
 vim.opt.relativenumber = true
-vim.o.wrap = true
+vim.o.wrap = false
 
 -- Save undo history
 vim.opt.undofile = true
@@ -36,8 +36,8 @@ vim.opt.fillchars:append { -- cleaner separators
 	eob = " ",
 	diff = "╱",
 }
-vim.opt.pumblend = 10
-vim.opt.winblend = 10
+vim.opt.pumblend = 0
+vim.opt.winblend = 0
 
 -- Rounded borders for LSP popups/diagnostics
 local border = "rounded"

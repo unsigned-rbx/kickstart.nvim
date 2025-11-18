@@ -66,7 +66,7 @@ keymap("n", "<Esc>", "<cmd>nohlsearch<CR>", { noremap = true, silent = true })
 
 -- Smart buffer close function
 local function smart_close_buffer()
-	local bufs = vim.fn.getbufinfo({ buflisted = 1 })
+	local bufs = vim.fn.getbufinfo { buflisted = 1 }
 	-- Count buffers, excluding the current one
 	local count = 0
 	for _, buf in ipairs(bufs) do
@@ -79,11 +79,11 @@ local function smart_close_buffer()
 		-- No other buffers, prompt to quit
 		local choice = vim.fn.confirm("Close Neovim?", "&Yes\n&No", 2)
 		if choice == 1 then
-			vim.cmd("quit")
+			vim.cmd "quit"
 		end
 	else
 		-- Close current buffer
-		vim.cmd("bdelete")
+		vim.cmd "bdelete!"
 	end
 end
 
